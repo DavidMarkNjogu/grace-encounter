@@ -181,10 +181,10 @@ export default function AdminDashboard({
             <div className="min-w-[160px] flex-1">
               <p className="font-medium">
                 {r.list_number && <span className="text-cream-100/40 mr-2">#{r.list_number}</span>}
-                {r.name}
+                <Highlight text={r.name} query={query} />
               </p>
               <p className="text-xs text-cream-100/50">
-                {formatKePhoneDisplay(r.phone_canonical)}
+                <Highlight text={formatKePhoneDisplay(r.phone_canonical)} query={query.replace(/\D/g, "")} />
               </p>
             </div>
             <select
@@ -245,7 +245,7 @@ function StatCard({ label, value }: { label: string; value: number }) {
 function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
   const [text, setText] = useState("");
   const [preview, setPreview] = useState<
-    (ReturnType<typeof dedupeParsedEntries> & { skippedCount: number }) | null
+    (ReturnType<typeof dedupeParsedEntries> & { skipped: string[] }) | null
   >(null);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<{ inserted: number; duplicate: number; invalid: number } | null>(
@@ -254,7 +254,7 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
 
   function runPreview() {
     const { entries, skipped } = parseRegistrationText(text);
-    setPreview({ ...dedupeParsedEntries(entries), skippedCount: skipped.length });
+    setPreview({ ...dedupeParsedEntries(entries), skipped });
     setResult(null);
   }
 
@@ -294,11 +294,33 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
         )}
       </div>
       {preview && (
-        <p className="mt-3 text-sm text-cream-100/60">
-          Found {preview.unique.length} new, {preview.duplicatesWithinPaste.length} repeated
-          within this paste, {preview.invalidPhone.length} with unreadable phone numbers,{" "}
-          {preview.skippedCount} lines skipped (no phone found — check manually).
-        </p>
+        <div className="mt-3">
+          <p className="text-sm text-cream-100/60 mb-2">
+            Found {preview.unique.length} new, {preview.duplicatesWithinPaste.length} repeated
+            within this paste.
+          </p>
+          {(preview.invalidPhone.length > 0 || preview.skipped.length > 0) && (
+            <div className="bg-ink-900/40 p-3 rounded-lg border border-warning-500/20 text-sm">
+              <p className="text-warning-400 font-medium mb-2">Needs Manual Review:</p>
+              {preview.invalidPhone.length > 0 && (
+                <div className="mb-2">
+                  <span className="text-cream-100/80">Unreadable phone numbers ({preview.invalidPhone.length}):</span>
+                  <ul className="list-disc pl-5 text-cream-100/50 mt-1">
+                    {preview.invalidPhone.map((e, i) => <li key={i}>{e.name} - {e.phoneRaw}</li>)}
+                  </ul>
+                </div>
+              )}
+              {preview.skipped.length > 0 && (
+                <div>
+                  <span className="text-cream-100/80">Skipped lines (no phone found) ({preview.skipped.length}):</span>
+                  <ul className="list-disc pl-5 text-cream-100/50 mt-1">
+                    {preview.skipped.map((s, i) => <li key={i}>{s}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       )}
       {result && (
         <p className="mt-2 text-sm text-ok-500">
@@ -381,3 +403,23 @@ function TeamPanel({
     </Card>
   );
 }
+
+ f u n c t i o n   H i g h l i g h t ( {   t e x t ,   q u e r y   } :   {   t e x t :   s t r i n g ;   q u e r y :   s t r i n g   } )   { 
+     i f   ( ! q u e r y )   r e t u r n   < > { t e x t } < / > ; 
+     c o n s t   p a r t s   =   t e x t . s p l i t ( n e w   R e g E x p ( \ ( \ ) \ ,   ' g i ' ) ) ; 
+     r e t u r n   ( 
+         < > 
+             { p a r t s . m a p ( ( p a r t ,   i )   = > 
+                 p a r t . t o L o w e r C a s e ( )   = = =   q u e r y . t o L o w e r C a s e ( )   ?   ( 
+                     < s p a n   k e y = { i }   c l a s s N a m e = \  g - g o l d - 5 0 0 / 4 0   t e x t - g o l d - 2 0 0   p x - 0 . 5   r o u n d e d \ > 
+                         { p a r t } 
+                     < / s p a n > 
+                 )   :   ( 
+                     < s p a n   k e y = { i } > { p a r t } < / s p a n > 
+                 ) 
+             ) } 
+         < / > 
+     ) ; 
+ } 
+  
+ 

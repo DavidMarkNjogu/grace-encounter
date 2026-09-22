@@ -24,16 +24,22 @@ export async function bulkImport(
   entries: { name: string; phoneRaw: string }[]
 ): Promise<{ inserted: number; duplicate: number; invalid: number }> {
   const supabase = createClient();
+  
+  const results = await Promise.all(
+    entries.map((entry) =>
+      supabase.rpc("register_person", {
+        p_name: entry.name,
+        p_phone: entry.phoneRaw,
+        p_source: "bulk_import",
+      })
+    )
+  );
+
   let inserted = 0,
     duplicate = 0,
     invalid = 0;
 
-  for (const entry of entries) {
-    const { data, error } = await supabase.rpc("register_person", {
-      p_name: entry.name,
-      p_phone: entry.phoneRaw,
-      p_source: "bulk_import",
-    });
+  for (const { data, error } of results) {
     if (error) continue;
     const result = data?.[0]?.result;
     if (result === "inserted") inserted++;
