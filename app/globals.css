@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@theme {
+  /* Pulled from the Grace Encounter poster: deep navy dusk -> gold sunburst */
+  --color-ink-950: #0b1224;
+  --color-ink-900: #101a33;
+  --color-ink-800: #172548;
+  --color-ink-700: #22335f;
+  --color-ink-600: #2f4478;
+
+  --color-gold-300: #f6cf8a;
+  --color-gold-400: #f0b95c;
+  --color-gold-500: #e8963a;
+  --color-gold-600: #c9762a;
+
+  --color-cream-50: #fbf7ef;
+  --color-cream-100: #f4ead6;
+
+  --color-ok-500: #4d9d6f;
+  --color-warn-500: #d69a3a;
+  --color-pending-500: #7c8db0;
+
+  --font-display: "Fraunces", "Georgia", serif;
+  --font-sans: "Manrope", "Segoe UI", system-ui, sans-serif;
+
+  --shadow-lifted: 0 18px 40px -12px rgb(11 18 36 / 0.35);
+}
+
+@layer base {
+  body {
+    background: radial-gradient(
+        1200px 600px at 50% -10%,
+        color-mix(in srgb, var(--color-gold-500) 18%, transparent),
+        transparent
+      ),
+      var(--color-ink-950);
+    color: var(--color-cream-50);
+    font-family: var(--font-sans);
+  }
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}
