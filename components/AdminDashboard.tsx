@@ -353,6 +353,9 @@ function TeamPanel({
         </div>
         {msg && <p className="mt-2 text-sm text-cream-100/60">{msg}</p>}
       </div>
+    </Card>
+
+    <Card className="mb-4 space-y-5">
       <div>
         <h2 className="mb-2 text-lg">Pickup points</h2>
         <p className="mb-2 text-sm text-cream-100/50">
