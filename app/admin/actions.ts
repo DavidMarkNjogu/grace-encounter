@@ -24,27 +24,35 @@ export async function bulkImport(
   entries: { name: string; phoneRaw: string }[]
 ): Promise<{ inserted: number; duplicate: number; invalid: number }> {
   const supabase = createClient();
-  
-  const results = await Promise.all(
-    entries.map((entry) =>
-      supabase.rpc("register_person", {
-        p_name: entry.name,
-        p_phone: entry.phoneRaw,
-        p_source: "bulk_import",
-      })
-    )
-  );
-
   let inserted = 0,
     duplicate = 0,
     invalid = 0;
 
-  for (const { data, error } of results) {
-    if (error) continue;
-    const result = data?.[0]?.result;
-    if (result === "inserted") inserted++;
-    else if (result === "duplicate") duplicate++;
-    else invalid++;
+  // Chunk array into batches of 20 to prevent Supabase connection pool rate limiting
+  const chunkSize = 20;
+  for (let i = 0; i < entries.length; i += chunkSize) {
+    const chunk = entries.slice(i, i + chunkSize);
+    const results = await Promise.all(
+      chunk.map((entry) =>
+        supabase.rpc("register_person", {
+          p_name: entry.name,
+          p_phone: entry.phoneRaw,
+          p_source: "bulk_import",
+        })
+      )
+    );
+
+    for (const { data, error } of results) {
+      if (error) {
+        // If an RPC fails (e.g. rate limit), count it as invalid so it doesn't fail silently
+        invalid++;
+        continue;
+      }
+      const result = data?.[0]?.result;
+      if (result === "inserted") inserted++;
+      else if (result === "duplicate") duplicate++;
+      else invalid++;
+    }
   }
 
   revalidatePath("/admin");
