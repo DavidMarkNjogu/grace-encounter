@@ -15,7 +15,7 @@ export default async function AdminPage() {
 
   const [{ data: registrants }, { data: pickupPoints }, { data: eventInfo }, { data: duplicates }] =
     await Promise.all([
-      supabase.from("registrants").select("*").order("list_number", { ascending: true }),
+      supabase.from("registrants").select("*").order("created_at", { ascending: false }),
       supabase.from("pickup_points").select("*").eq("is_active", true).order("name"),
       supabase.from("event_info").select("*").eq("id", true).maybeSingle(),
       supabase.from("possible_duplicates").select("*"),

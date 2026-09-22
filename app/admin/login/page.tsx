@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button, Input, Card } from "@/components/ui";
+import Wordmark from "@/components/Wordmark";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -30,6 +31,10 @@ export default function AdminLoginPage() {
 
   return (
     <main className="mx-auto max-w-sm px-5 py-24">
+      <a href="/" className="mb-4 inline-block text-xs text-cream-100/60 underline hover:text-cream-100/90">
+        &larr; Back to registration
+      </a>
+      <div className="mb-8 flex justify-center"><Wordmark /></div>
       <Card>
         <h1 className="text-xl mb-1">Admin sign-in</h1>
         <p className="text-sm text-cream-100/60 mb-5">

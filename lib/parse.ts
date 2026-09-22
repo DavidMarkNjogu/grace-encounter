@@ -13,7 +13,7 @@ export interface SkippedEntry {
   lineNumber: number;
 }
 
-const PHONE_RE = /(?:\+?254[\s-]?\d[\d\s-]{6,12}\d|(?<!\d)0\d[\d\s-]{6,10}\d(?!\d))/;
+const PHONE_RE = /(\+?254[\s-]?\d[\d\s-]{6,12}\d|\b0\d[\d\s-]{6,10}\d\b)/;
 // A new list entry: "1.", "371.", "O." (capital O used as zero in this group's
 // stylized text), "12)", "12:" — at the very start of a line.
 const ENTRY_BOUNDARY_RE = /^[O0]\d{0,3}[.):]|^\d{1,4}\s*[.):]/;
@@ -22,13 +22,6 @@ const BOILERPLATE_RE =
 
 function normalizeUnicodeLetters(text: string): string {
   return text.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
-}
-
-function toTitleCase(str: string): string {
-  return str.replace(
-    /\w+/g,
-    (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
-  );
 }
 
 /**
@@ -55,7 +48,6 @@ export function parseRegistrationText(raw: string): {
 
   lines.forEach((line, idx) => {
     const isBoundary = ENTRY_BOUNDARY_RE.test(line);
-
     if (isBoundary && buffer) {
       chunks.push({ text: buffer, lineNumber: bufferStartLine, isRealEntry: bufferIsRealEntry });
       buffer = line;
@@ -89,14 +81,11 @@ export function parseRegistrationText(raw: string): {
     }
 
     const phoneRaw = phoneMatch[0].trim();
-    let rawName = withoutIndex
+    const name = withoutIndex
       .slice(0, phoneMatch.index)
-      .trim()
       .replace(/[-–—_.:]+$/, "")
       .replace(/\s+/g, " ")
       .trim();
-
-    const name = toTitleCase(rawName);
 
     if (!name) {
       skipped.push({ rawText: chunk.text, reason: "no_phone_found", lineNumber: chunk.lineNumber });

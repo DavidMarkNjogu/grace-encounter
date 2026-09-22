@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { formatKePhoneDisplay } from "@/lib/phone";
-import { Input, Card } from "./ui";
+import { maskKePhoneDisplay, toSearchDigits } from "@/lib/phone";
+import { Input, ListRow } from "./ui";
 
 interface Row {
   id: string;
@@ -39,10 +39,14 @@ export default function SearchBox() {
     }
     setLoading(true);
     const t = setTimeout(async () => {
+      const qDigits = toSearchDigits(q);
+      const orClause = qDigits
+        ? `name.ilike.%${q}%,phone_canonical.ilike.%${qDigits}%`
+        : `name.ilike.%${q}%`;
       const { data } = await supabase
         .from("public_registrants")
         .select("id,name,phone_canonical")
-        .or(`name.ilike.%${q}%,phone_canonical.ilike.%${q.replace(/\D/g, "")}%`)
+        .or(orClause)
         .limit(25);
       setResults(data ?? []);
       setLoading(false);
@@ -67,12 +71,12 @@ export default function SearchBox() {
             </p>
           )}
           {results.map((r) => (
-            <Card key={r.id} className="flex items-center justify-between py-3">
+            <ListRow key={r.id} className="flex items-center justify-between">
               <span>{highlight(r.name, query)}</span>
               <span className="text-cream-100/60 text-sm">
-                {highlight(formatKePhoneDisplay(r.phone_canonical), query.replace(/\D/g, ""))}
+                {maskKePhoneDisplay(r.phone_canonical)}
               </span>
-            </Card>
+            </ListRow>
           ))}
         </div>
       )}

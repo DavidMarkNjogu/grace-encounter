@@ -64,9 +64,33 @@ redeploys automatically.
 - **Team (`/admin` → "Team", admins only)**: add a caller/admin by email
   (they'll use magic-link sign-in, no password) and manage pickup points.
 
-## Known v1 limitations (see the PRD for the full picture)
-- Same-name-different-number people are NOT auto-merged (by design — only
-  exact phone-number matches are treated as duplicates); a fuzzy "possible
-  duplicate" review queue is a P1, not yet built.
-- No CSV export yet (P1).
-- No audit trail of which admin changed what (P1).
+## Also in v1 now (previously listed as P1)
+- **Possible-duplicate review** (Admin → "Duplicates"): same/near-identical
+  name with a *different* phone number is never auto-merged — it's flagged
+  for a human to either dismiss ("genuinely two different people") or
+  remove the extra entry. Exact phone-number matches remain the only thing
+  treated as a hard duplicate automatically.
+- **Notes per registrant** ("+ note" on any row) — e.g. "confirming Friday",
+  "called twice, no answer".
+- **CSV export** (Admin → "Export CSV") — current filtered view.
+- **Audit trail** — every status/pickup/note/team/event-info change is
+  logged to `admin_actions` (actor email, action, timestamp) for later
+  review via SQL; no UI for it yet, but the data's being captured.
+
+## Bugs found and fixed while building this (worth knowing about)
+- `normalize_ke_phone` originally accepted some non-phone digit strings as
+  valid (e.g. a student registration number like `G11/09644/22` normalized
+  to a fake number). Fixed by rejecting any input containing a letter and
+  tightening accepted digit patterns to real Kenyan mobile ranges
+  (07xx.../011x...) instead of "starts with 7 or 1".
+- The realtime publication statement would abort the whole schema script if
+  run somewhere `supabase_realtime` doesn't pre-exist; it's now defensive.
+- The whole project (schema against real Postgres, and `npm run build`)
+  was actually compiled/run to verify this, not just read over.
+
+## Known v1 limitations
+- No UI for the audit log yet (data is captured, just query it in Supabase
+  directly for now: `select * from admin_actions order by created_at desc`).
+- Bulk-import duplicate/possible-duplicate detection runs one entry at a
+  time server-side — fine for a few hundred rows, would need batching for
+  thousands.

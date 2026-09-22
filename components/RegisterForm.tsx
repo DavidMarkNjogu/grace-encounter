@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { normalizeKePhone } from "@/lib/phone";
 import { Button, Input, Card } from "./ui";
 
 export default function RegisterForm() {
@@ -52,12 +53,21 @@ export default function RegisterForm() {
           onChange={(e) => setPhone(e.target.value)}
           required
         />
+        {phone.trim().length >= 7 && (
+          <p className={`text-xs ${normalizeKePhone(phone) ? "text-ok-300" : "text-warn-500"}`}>
+            {normalizeKePhone(phone)
+              ? "✓ looks like a valid Kenyan number"
+              : "Doesn't look like a valid Kenyan mobile number yet"}
+          </p>
+        )}
         <Button type="submit" disabled={submitting} className="w-full">
           {submitting ? "Adding…" : "Register"}
         </Button>
       </form>
       {status === "ok" && (
-        <p className="mt-3 text-sm text-ok-500">You're on the list. See you there!</p>
+        <p className="mt-3 rounded-lg border border-ok-300/30 bg-ok-300/10 px-3 py-2 text-sm text-ok-300">
+          You're on the list. See you there!
+        </p>
       )}
       {status === "dup" && (
         <p className="mt-3 text-sm text-warn-500">

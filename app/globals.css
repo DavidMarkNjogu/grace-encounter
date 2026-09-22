@@ -1,44 +1,65 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Manrope:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @theme {
-  /* Pulled from the Grace Encounter poster: deep navy dusk -> gold sunburst */
-  --color-ink-950: #0b1224;
-  --color-ink-900: #101a33;
-  --color-ink-800: #172548;
-  --color-ink-700: #22335f;
+  --color-ink-950: #0a0f1f;
+  --color-ink-900: #0f1830;
+  --color-ink-800: #17244a;
+  --color-ink-700: #223362;
   --color-ink-600: #2f4478;
 
-  --color-gold-300: #f6cf8a;
-  --color-gold-400: #f0b95c;
-  --color-gold-500: #e8963a;
-  --color-gold-600: #c9762a;
+  --color-gold-300: #f8d68f;
+  --color-gold-400: #f2b23e;
+  --color-gold-500: #e8931f;
+  --color-gold-600: #c9701a;
 
-  --color-cream-50: #fbf7ef;
-  --color-cream-100: #f4ead6;
+  --color-cream-50: #fbf6ea;
+  --color-cream-100: #ecdcb8;
+  --color-cream-200: #d8c7a3;
+  --color-ok-300: #7fdba0;
 
   --color-ok-500: #4d9d6f;
   --color-warn-500: #d69a3a;
-  --color-pending-500: #7c8db0;
+  --color-pending-500: #8b9dc3;
 
   --font-display: "Fraunces", "Georgia", serif;
   --font-sans: "Manrope", "Segoe UI", system-ui, sans-serif;
 
-  --shadow-lifted: 0 18px 40px -12px rgb(11 18 36 / 0.35);
+  --shadow-lifted: 0 18px 40px -12px rgb(5 8 18 / 0.55);
 }
 
 @layer base {
-  body {
-    background: radial-gradient(
-        1200px 600px at 50% -10%,
-        color-mix(in srgb, var(--color-gold-500) 18%, transparent),
-        transparent
-      ),
+  html { background: var(--color-ink-950); min-height: 100%; }
+  body { min-height: 100vh;
+    /* Asymmetric sunburst, top-right, echoing the poster's light source,
+       plus a faint grain so flat dark cards don't read as generic-AI-slop flat. */
+    background:
+      radial-gradient(900px 700px at 82% -8%, color-mix(in srgb, var(--color-gold-500) 30%, transparent), transparent 60%),
+      radial-gradient(600px 500px at 8% 8%, color-mix(in srgb, var(--color-ink-600) 55%, transparent), transparent 70%),
       var(--color-ink-950);
+    background-attachment: fixed;
     color: var(--color-cream-50);
     font-family: var(--font-sans);
+    position: relative;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
   h1, h2, h3 {
     font-family: var(--font-display);
     letter-spacing: -0.01em;
+    font-weight: 500;
+  }
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23ecdcb8'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.9rem center;
+    padding-right: 2.2rem !important;
   }
 }
