@@ -15,7 +15,7 @@ export function normalizeKePhone(raw: string): string | null {
 
   // Real Kenyan mobile ranges only: 07xxxxxxxx (all networks) or 011xxxxxxx
   // (Telkom/Faiba/Equitel) — mirrors normalize_ke_phone() in schema.sql.
-  if (national.startsWith("7") || national.startsWith("11")) return "254" + national;
+  if (national.startsWith("7") || national.startsWith("1")) return "254" + national;
   return null;
 }
 
@@ -50,3 +50,4 @@ export function maskKePhoneDisplay(canonical: string): string {
   if (parts.length !== 3) return full;
   return `${parts[0]} \u2022\u2022\u2022 ${parts[2]}`;
 }
+

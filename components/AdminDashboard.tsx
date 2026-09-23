@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Users, Filter, MapPin, UploadCloud, ChevronLeft, ChevronRight, Trash2, Edit2, Search, CheckCircle2, AlertCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { formatKePhoneDisplay, toSearchDigits } from "@/lib/phone";
+import { formatKePhoneDisplay, toSearchDigits, normalizeKePhone } from "@/lib/phone";
 import { parseRegistrationText, dedupeParsedEntries } from "@/lib/parse";
 import { Button, Input, Card, StatusBadge } from "./ui";
 import Wordmark from "./Wordmark";
@@ -317,14 +317,42 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
     (ReturnType<typeof dedupeParsedEntries> & { skipped: import("@/lib/parse").SkippedEntry[] }) | null
   >(null);
   const [importing, setImporting] = useState(false);
-  const [result, setResult] = useState<{ inserted: number; duplicate: number; invalid: number } | null>(
-    null
-  );
+  const [result, setResult] = useState<{ inserted: number; duplicate: number; invalid: number } | null>(null);
+
+  const [reviewMode, setReviewMode] = useState(false);
+  const [reviewIndex, setReviewIndex] = useState(0);
+  const [reviewName, setReviewName] = useState("");
+  const [reviewPhone, setReviewPhone] = useState("");
+
+  const reviewItems = useMemo(() => {
+    if (!preview) return [];
+    return [
+      ...preview.invalidPhone.map(p => ({ type: 'invalid', rawText: p.name + ' ' + p.phoneRaw, originalListNumber: p.originalListNumber, obj: p })),
+      ...preview.skipped.map(s => ({ type: 'skipped', rawText: s.rawText, originalListNumber: null, obj: s }))
+    ];
+  }, [preview]);
+
+  useEffect(() => {
+    if (reviewMode && reviewIndex < reviewItems.length) {
+      const item = reviewItems[reviewIndex];
+      if (item.type === 'invalid') {
+        setReviewName((item.obj as any).name || "");
+        setReviewPhone((item.obj as any).phoneRaw || "");
+      } else {
+        setReviewName("");
+        setReviewPhone("");
+      }
+    } else if (reviewMode && reviewIndex >= reviewItems.length) {
+      setReviewMode(false);
+    }
+  }, [reviewMode, reviewIndex, reviewItems]);
 
   function runPreview() {
     const { entries, skipped } = parseRegistrationText(text);
     setPreview({ ...dedupeParsedEntries(entries), skipped });
     setResult(null);
+    setReviewMode(false);
+    setReviewIndex(0);
   }
 
   async function runImport() {
@@ -342,6 +370,62 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
     onDone(res);
   }
 
+  function resolveItem(save: boolean) {
+    if (!preview) return;
+    const item = reviewItems[reviewIndex];
+    if (save && reviewName.trim() && reviewPhone.trim()) {
+       setPreview(p => {
+         if (!p) return p;
+         return {
+            ...p,
+            unique: [...p.unique, {
+               name: reviewName.trim(),
+               phoneRaw: reviewPhone.trim(),
+               phoneCanonical: normalizeKePhone(reviewPhone.trim()) || reviewPhone.trim(),
+               lineNumber: (item.obj as any).lineNumber || 0,
+               originalListNumber: item.originalListNumber
+            }],
+            invalidPhone: item.type === 'invalid' ? p.invalidPhone.filter(x => x !== item.obj) : p.invalidPhone,
+            skipped: item.type === 'skipped' ? p.skipped.filter(x => x !== item.obj) : p.skipped
+         };
+       });
+    }
+    setReviewIndex(i => i + 1);
+  }
+
+  if (reviewMode && reviewIndex < reviewItems.length) {
+    const item = reviewItems[reviewIndex];
+    return (
+      <Card className="mb-4 bg-ink-900 border-gold-500/30">
+        <h2 className="mb-2 text-lg text-gold-400 flex items-center gap-2">
+           <AlertCircle className="h-5 w-5" />
+           Manual Review ({reviewIndex + 1} of {reviewItems.length})
+        </h2>
+        <div className="bg-ink-950 p-3 rounded text-sm text-cream-200 mb-4 border border-ink-800">
+           <span className="text-cream-100 opacity-50 mr-2">Raw Text:</span>
+           {item.rawText}
+        </div>
+        
+        <div className="flex flex-col gap-3 mb-4">
+           <div>
+             <label className="text-xs text-cream-200 mb-1 block">Correct Name</label>
+             <input value={reviewName} onChange={e => setReviewName(e.target.value)} className="w-full bg-ink-950 border border-ink-800 p-2 rounded" placeholder="E.g. John Doe" />
+           </div>
+           <div>
+             <label className="text-xs text-cream-200 mb-1 block">Correct Phone</label>
+             <input value={reviewPhone} onChange={e => setReviewPhone(e.target.value)} className="w-full bg-ink-950 border border-ink-800 p-2 rounded" placeholder="07xx xxx xxx" />
+           </div>
+        </div>
+
+        <div className="flex gap-2">
+           <Button onClick={() => resolveItem(true)}>Save & Next</Button>
+           <Button variant="ghost" onClick={() => resolveItem(false)}>Skip</Button>
+           <Button variant="ghost" onClick={() => setReviewMode(false)} className="ml-auto text-cream-200">Close</Button>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card className="mb-4">
       <h2 className="mb-2 text-lg">Import from WhatsApp</h2>
@@ -353,7 +437,7 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={8}
-        placeholder="Paste the WhatsApp list text here…"
+        placeholder="Paste the WhatsApp list text here..."
         className="w-full rounded-xl border border-ink-800 bg-ink-950 p-3 text-sm outline-none focus:border-gold-500"
       />
       <div className="mt-3 flex gap-2">
@@ -362,7 +446,7 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
         </Button>
         {preview && (
           <Button onClick={runImport} disabled={importing || preview.unique.length === 0}>
-            {importing ? "Importing…" : `Import ${preview.unique.length} new`}
+            {importing ? "Importing..." : "Import " + preview.unique.length + " new"}
           </Button>
         )}
       </div>
@@ -372,39 +456,26 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
             Found {preview.unique.length} new, {preview.duplicatesWithinPaste.length} repeated
             within this paste.
           </p>
-          {(preview.invalidPhone.length > 0 || preview.skipped.length > 0) && (
+          {reviewItems.length > 0 && (
             <div className="bg-ink-900/40 p-3 rounded-lg border border-warning-500/20 text-sm">
-              <p className="text-warning-400 font-medium mb-2">Needs Manual Review:</p>
-              {preview.invalidPhone.length > 0 && (
-                <div className="mb-2">
-                  <span className="text-cream-100">Unreadable phone numbers ({preview.invalidPhone.length}):</span>
-                  <ul className="list-disc pl-5 text-cream-200 mt-1">
-                    {preview.invalidPhone.map((e, i) => <li key={i}>{e.name} - {e.phoneRaw}</li>)}
-                  </ul>
-                </div>
-              )}
-              {preview.skipped.length > 0 && (
-                <div>
-                  <span className="text-cream-100">Skipped lines (no phone found) ({preview.skipped.length}):</span>
-                  <ul className="list-disc pl-5 text-cream-200 mt-1">
-                    {preview.skipped.map((s, i) => <li key={i}><span className="text-cream-100/30 mr-1">L{s.lineNumber}</span>{s.rawText}</li>)}
-                  </ul>
-                </div>
-              )}
+              <div className="flex justify-between items-center mb-2">
+                 <p className="text-warning-400 font-medium">Needs Manual Review ({reviewItems.length})</p>
+                 <Button variant="secondary" onClick={() => setReviewMode(true)} className="py-1 h-8 text-xs">Review Now</Button>
+              </div>
+              <p className="text-cream-200 text-xs">Some items couldn't be parsed automatically. Click review to fix them.</p>
             </div>
           )}
         </div>
       )}
       {result && (
         <p className="mt-2 text-sm text-ok-500">
-          Imported {result.inserted} · already on list {result.duplicate} · invalid{" "}
+          Imported {result.inserted} | already on list {result.duplicate} | invalid{" "}
           {result.invalid}
         </p>
       )}
     </Card>
   );
 }
-
 function TeamPanel({
   teamMembers,
   pickupPoints,
@@ -782,6 +853,9 @@ function Highlight({ text, query }: { text: string; query: string }) {
     </>
   );
 }
+
+
+
 
 
 
