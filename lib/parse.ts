@@ -5,6 +5,7 @@ export interface ParsedEntry {
   phoneRaw: string;
   phoneCanonical: string | null;
   lineNumber: number;
+  originalListNumber: number | null;
 }
 
 export interface SkippedEntry {
@@ -17,6 +18,7 @@ const PHONE_RE = /(\+?254[\s-]?\d[\d\s-]{6,12}\d|\b0\d[\d\s-]{6,10}\d\b)/;
 // A new list entry: "1.", "371.", "O." (capital O used as zero in this group's
 // stylized text), "12)", "12:" — at the very start of a line.
 const ENTRY_BOUNDARY_RE = /^[O0]\d{0,3}[.):]|^\d{1,4}\s*[.):]/;
+const LIST_NUMBER_EXTRACT_RE = /^([O0]?\d{1,4})\s*[.):]/i;
 const BOILERPLATE_RE =
   /^(read more|register now\.*|name\.\s*phone|kindly note|grace (encounter|arena)|free transport|nairobi[\s-]*kenya|nakuru to uhuru park|entry free|venue|for more info)/i;
 
@@ -67,6 +69,12 @@ export function parseRegistrationText(raw: string): {
   const skipped: SkippedEntry[] = [];
 
   for (const chunk of chunks) {
+    let originalListNumber: number | null = null;
+    const numMatch = chunk.text.match(LIST_NUMBER_EXTRACT_RE);
+    if (numMatch) {
+      originalListNumber = parseInt(numMatch[1].replace(/O/i, "0"), 10);
+    }
+
     const withoutIndex = chunk.text.replace(ENTRY_BOUNDARY_RE, "").trim();
     const phoneMatch = withoutIndex.match(PHONE_RE);
 
@@ -93,7 +101,7 @@ export function parseRegistrationText(raw: string): {
     }
 
     const phoneCanonical = normalizeKePhone(phoneRaw);
-    entries.push({ name, phoneRaw, phoneCanonical, lineNumber: chunk.lineNumber });
+    entries.push({ name, phoneRaw, phoneCanonical, lineNumber: chunk.lineNumber, originalListNumber });
   }
 
   return { entries, skipped };

@@ -54,7 +54,7 @@ export async function bulkImport(
           p_name: entry.name,
           p_phone: entry.phoneRaw,
           p_source: "bulk_import",
-          p_list_number: i + j + 1,   // 1-based ordinal from the original paste
+          p_list_number: entry.originalListNumber ?? (i + j + 1),
         })
       )
     );

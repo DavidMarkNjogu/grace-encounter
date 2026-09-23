@@ -88,6 +88,22 @@ Grace Encounter
     expect(entries[1].name).toBe("Beta");
     expect(entries[2].name).toBe("Gamma");
   });
+
+  it("extracts the original list number from the text", () => {
+    const text = `
+45. Alpha 0700000001
+O23) Beta 0700000002
+9999: Gamma 0700000003
+NoNumber Delta 0700000004
+`.trim();
+    const { entries } = parseRegistrationText(text);
+    expect(entries[0].originalListNumber).toBe(45);
+    expect(entries[1].originalListNumber).toBe(23);
+    expect(entries[2].originalListNumber).toBe(9999);
+    // Delta gets skipped because it has no number, but if we parsed it, it would be null.
+    // Let's assert length is 3 since un-numbered lines get dropped by the boundary regex.
+    expect(entries).toHaveLength(3);
+  });
 });
 
 // ---------------------------------------------------------------------------
