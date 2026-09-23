@@ -10,11 +10,11 @@ export default async function HomePage() {
   return (
     <main className="mx-auto max-w-xl px-5 py-14">
       <header className="mb-10 text-center">
-        <p className="text-gold-400 text-sm tracking-[0.2em] uppercase mb-2">
+        <p className="text-cream-50 font-semibold text-sm tracking-[0.2em] uppercase mb-2">
           Grace Encounter · Nairobi
         </p>
         <h1 className="text-3xl md:text-4xl font-medium">Free Transport Registration</h1>
-        <p className="mt-3 text-cream-100/60 text-sm">
+        <p className="mt-3 text-cream-200 text-sm">
           Check if you're already on the list, or add yourself below.
         </p>
       </header>
@@ -28,12 +28,13 @@ export default async function HomePage() {
           faq={info?.faq ?? []}
         />
       </div>
-      <footer className="mt-14 text-center text-xs text-cream-100/60">
+      <footer className="mt-14 text-center text-xs text-cream-200">
         Admin?{" "}
-        <a href="/admin" className="text-gold-400 underline hover:text-gold-300">
+        <a href="/admin" className="text-cream-50 font-semibold underline hover:text-gold-300">
           Sign in
         </a>
       </footer>
     </main>
   );
 }
+

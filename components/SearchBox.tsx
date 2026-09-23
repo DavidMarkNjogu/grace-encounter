@@ -62,18 +62,18 @@ export default function SearchBox() {
         onChange={(e) => setQuery(e.target.value)}
         aria-label="Search registration list"
       />
-      {loading && <p className="text-sm text-cream-100/50">Searching…</p>}
+      {loading && <p className="text-sm text-cream-200">Searching…</p>}
       {!loading && query.trim().length >= 2 && (
         <div className="space-y-2">
           {results.length === 0 && (
-            <p className="text-sm text-cream-100/60">
+            <p className="text-sm text-cream-200">
               No match yet — you can add your details below.
             </p>
           )}
           {results.map((r) => (
             <ListRow key={r.id} className="flex items-center justify-between">
               <span>{highlight(r.name, query)}</span>
-              <span className="text-cream-100/60 text-sm">
+              <span className="text-cream-200 text-sm">
                 {maskKePhoneDisplay(r.phone_canonical)}
               </span>
             </ListRow>
@@ -83,3 +83,4 @@ export default function SearchBox() {
     </div>
   );
 }
+

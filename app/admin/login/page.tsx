@@ -31,13 +31,13 @@ export default function AdminLoginPage() {
 
   return (
     <main className="mx-auto max-w-sm px-5 py-24">
-      <a href="/" className="mb-4 inline-block text-xs text-cream-100/60 underline hover:text-cream-100/90">
+      <a href="/" className="mb-4 inline-block text-xs text-cream-200 underline hover:text-cream-100/90">
         &larr; Back to registration
       </a>
       <div className="mb-8 flex justify-center"><Wordmark /></div>
       <Card>
         <h1 className="text-xl mb-1">Admin sign-in</h1>
-        <p className="text-sm text-cream-100/60 mb-5">
+        <p className="text-sm text-cream-200 mb-5">
           Enter the email that's been added to the team list — you'll get a magic link.
         </p>
         {sent ? (
@@ -61,3 +61,4 @@ export default function AdminLoginPage() {
     </main>
   );
 }
+
