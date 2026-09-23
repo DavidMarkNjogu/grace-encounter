@@ -196,6 +196,7 @@ export default function AdminDashboard({
             className="flex-1 min-w-[200px]"
           />
           <select
+            aria-label="Filter by status"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as Status | "all")}
             className="rounded-xl border border-cream-100/15 bg-ink-900/60 px-3 py-2 text-sm"
@@ -208,6 +209,7 @@ export default function AdminDashboard({
             ))}
           </select>
           <select
+            aria-label="Filter by pickup point"
             value={pickupFilter}
             onChange={(e) => setPickupFilter(e.target.value)}
             className="rounded-xl border border-cream-100/15 bg-ink-900/60 px-3 py-2 text-sm"
@@ -220,6 +222,7 @@ export default function AdminDashboard({
             ))}
           </select>
           <select
+            aria-label="Toggle numbering mode"
             value={numberingMode}
             onChange={(e) => setNumberingMode(e.target.value as "original" | "sequential")}
             className="rounded-xl border border-cream-100/15 bg-ink-900/60 px-3 py-2 text-sm"

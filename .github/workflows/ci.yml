@@ -29,8 +29,19 @@ jobs:
       - name: Type-check
         run: pnpm exec tsc --noEmit
 
-      - name: Unit tests
+      - name: Unit tests & a11y tests
         run: pnpm test
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase local database
+        run: supabase start
+
+      - name: Database Tests (pgTAP)
+        run: supabase test db
 
       - name: Build
         env:
