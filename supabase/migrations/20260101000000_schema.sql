@@ -187,7 +187,7 @@ begin
 end;
 $$ language plpgsql security definer;
 
-grant execute on function register_person(text, text, registrant_source) to anon, authenticated;
+grant execute on function register_person(text, text, registrant_source, integer) to anon, authenticated;
 grant execute on function normalize_ke_phone(text) to anon, authenticated;
 
 -- ---------- Seed: starter pickup points (rename/add in the admin panel any time) ----------
