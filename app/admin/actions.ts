@@ -123,3 +123,11 @@ export async function removeRegistrant(id: string, reason: string) {
   revalidatePath("/admin");
   return { error: error?.message ?? null };
 }
+
+export async function removeTeamMember(id: string) {
+  const supabase = createClient();
+  const { error } = await supabase.from("admin_users").delete().eq("id", id);
+  if (!error) await logAction("team_member_removed", null, { id });
+  revalidatePath("/admin");
+  return { error: error?.message ?? null };
+}
