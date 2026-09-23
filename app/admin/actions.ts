@@ -38,7 +38,7 @@ export async function updateNote(id: string, note: string) {
 }
 
 export async function bulkImport(
-  entries: { name: string; phoneRaw: string }[]
+  entries: { name: string; phoneRaw: string; originalListNumber?: number | null }[]
 ): Promise<{ inserted: number; duplicate: number; invalid: number }> {
   const supabase = createClient();
   let inserted = 0,

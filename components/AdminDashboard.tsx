@@ -291,7 +291,11 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
     if (!preview) return;
     setImporting(true);
     const res = await bulkImport(
-      preview.unique.map((e) => ({ name: e.name, phoneRaw: e.phoneRaw }))
+      preview.unique.map((e) => ({ 
+        name: e.name, 
+        phoneRaw: e.phoneRaw,
+        originalListNumber: e.originalListNumber 
+      }))
     );
     setImporting(false);
     setResult(res);
