@@ -34,12 +34,12 @@ export function formatKePhoneDisplay(canonical: string): string {
 export function toSearchDigits(query: string): string {
   const digits = query.replace(/\D/g, "");
   if (!digits) return "";
+  if (digits === "254") return "";             // bare "254" matches every canonical phone — block it
   if (digits.startsWith("254")) return digits;
   if (digits.startsWith("0")) {
     const rest = digits.slice(1);
     return rest ? "254" + rest : ""; // "0" alone is not a meaningful phone query
   }
-  if (digits === "254") return "";
   if (/^[71]/.test(digits)) return "254" + digits;
   return digits;
 }
