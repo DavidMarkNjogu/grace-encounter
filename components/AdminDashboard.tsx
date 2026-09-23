@@ -201,7 +201,7 @@ export default function AdminDashboard({
         />
       )}
 
-      <Card className="mb-4">
+      <Card className="mb-4 p-5">
         <div className="flex flex-wrap gap-3">
           <Input
             placeholder="Search name or phone…"
@@ -339,7 +339,8 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
         setReviewName((item.obj as any).name || "");
         setReviewPhone((item.obj as any).phoneRaw || "");
       } else {
-        setReviewName("");
+        // Pre-fill the skipped raw text so the user doesn't have to type from scratch
+        setReviewName(item.rawText || "");
         setReviewPhone("");
       }
     } else if (reviewMode && reviewIndex >= reviewItems.length) {
@@ -396,30 +397,31 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
   if (reviewMode && reviewIndex < reviewItems.length) {
     const item = reviewItems[reviewIndex];
     return (
-      <Card className="mb-4 bg-ink-900 border-gold-500/30">
-        <h2 className="mb-2 text-lg text-gold-400 flex items-center gap-2">
-           <AlertCircle className="h-5 w-5" />
+      <Card className="mb-6 bg-ink-900 border-gold-500/30 p-5 shadow-lg">
+        <h2 className="mb-4 text-xl font-medium text-gold-400 flex items-center gap-2">
+           <AlertCircle className="h-6 w-6" />
            Manual Review ({reviewIndex + 1} of {reviewItems.length})
         </h2>
-        <div className="bg-ink-950 p-3 rounded text-sm text-cream-200 mb-4 border border-ink-800">
-           <span className="text-cream-100 opacity-50 mr-2">Raw Text:</span>
-           {item.rawText}
+        <div className="bg-ink-950 p-4 rounded-md text-sm text-cream-200 mb-5 border border-ink-800">
+           <span className="text-cream-100 opacity-50 mr-2 block mb-1 uppercase tracking-wider text-xs font-semibold">Raw Text Detected:</span>
+           <span className="font-medium">{item.rawText}</span>
         </div>
         
-        <div className="flex flex-col gap-3 mb-4">
+        <div className="flex flex-col gap-4 mb-6">
            <div>
-             <label className="text-xs text-cream-200 mb-1 block">Correct Name</label>
-             <input value={reviewName} onChange={e => setReviewName(e.target.value)} className="w-full bg-ink-950 border border-ink-800 p-2 rounded" placeholder="E.g. John Doe" />
+             <label className="text-xs font-medium text-cream-200 mb-1.5 block">Correct Name</label>
+             <input value={reviewName} onChange={e => setReviewName(e.target.value)} className="w-full bg-ink-950 border border-ink-800 px-3 py-2.5 rounded-md text-sm outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500/50" placeholder="E.g. John Doe" />
            </div>
            <div>
-             <label className="text-xs text-cream-200 mb-1 block">Correct Phone</label>
-             <input value={reviewPhone} onChange={e => setReviewPhone(e.target.value)} className="w-full bg-ink-950 border border-ink-800 p-2 rounded" placeholder="07xx xxx xxx" />
+             <label className="text-xs font-medium text-cream-200 mb-1.5 block">Correct Phone</label>
+             <input value={reviewPhone} onChange={e => setReviewPhone(e.target.value)} className="w-full bg-ink-950 border border-ink-800 px-3 py-2.5 rounded-md text-sm outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500/50" placeholder="07xx xxx xxx" />
            </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
            <Button onClick={() => resolveItem(true)}>Save & Next</Button>
-           <Button variant="ghost" onClick={() => resolveItem(false)}>Skip</Button>
+           <Button variant="secondary" onClick={() => resolveItem(false)}>Skip</Button>
+           <Button variant="ghost" disabled={reviewIndex === 0} onClick={() => setReviewIndex(i => Math.max(0, i - 1))} className="text-cream-200">Previous</Button>
            <Button variant="ghost" onClick={() => setReviewMode(false)} className="ml-auto text-cream-200">Close</Button>
         </div>
       </Card>
@@ -427,7 +429,7 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
   }
 
   return (
-    <Card className="mb-4">
+    <Card className="mb-4 p-5">
       <h2 className="mb-2 text-lg">Import from WhatsApp</h2>
       <p className="mb-3 text-sm text-cream-200">
         Paste one or more pasted message blocks below. We'll parse, normalize phone numbers,
@@ -491,7 +493,7 @@ function TeamPanel({
   const [pointName, setPointName] = useState("");
 
   return (
-    <Card className="mb-4 space-y-5">
+    <Card className="mb-4 p-5 space-y-5">
       <div>
         <h2 className="mb-2 text-lg">Team members</h2>
         <div className="flex flex-wrap gap-2 mb-4">
@@ -596,7 +598,7 @@ function EventInfoPanel({
   }
 
   return (
-    <Card className="mb-4 space-y-4">
+    <Card className="mb-4 p-5 space-y-4">
       <div>
         <h2 className="mb-2 text-lg">Venue</h2>
         <div className="flex flex-wrap gap-2">
@@ -754,7 +756,7 @@ function DuplicatesPanel({
   const [busy, setBusy] = useState<string | null>(null);
 
   return (
-    <Card className="mb-4">
+    <Card className="mb-4 p-5">
       <h2 className="mb-1 text-lg">Possible duplicates</h2>
       <p className="mb-3 text-sm text-cream-200">
         Same or very similar name, different phone number — never auto-merged. Confirm each

@@ -41,24 +41,27 @@ export function parseRegistrationText(raw: string): {
   const chunks: { text: string; lineNumber: number; isRealEntry: boolean }[] = [];
   let buffer = "";
   let bufferStartLine = 0;
-  let bufferIsRealEntry = false;
 
   lines.forEach((line, idx) => {
-    const isBoundary = ENTRY_BOUNDARY_RE.test(line);
-    if (isBoundary && buffer) {
-      chunks.push({ text: buffer, lineNumber: bufferStartLine, isRealEntry: bufferIsRealEntry });
-      buffer = line;
-      bufferStartLine = idx + 1;
-      bufferIsRealEntry = true;
-    } else {
-      if (!buffer) {
-        bufferStartLine = idx + 1;
-        bufferIsRealEntry = isBoundary;
-      }
-      buffer = buffer ? buffer + " " + line : line;
+    const lineHasIndex = ENTRY_BOUNDARY_RE.test(line);
+    const bufferHasPhone = PHONE_RE.test(buffer);
+
+    // Flush the buffer if the current line clearly starts a new person
+    // OR if the buffer already has a complete person (contains a phone number).
+    if ((lineHasIndex || bufferHasPhone) && buffer.trim()) {
+      chunks.push({ text: buffer, lineNumber: bufferStartLine, isRealEntry: true });
+      buffer = "";
     }
+
+    if (!buffer) {
+      bufferStartLine = idx + 1;
+    }
+    buffer = buffer ? buffer + " " + line : line;
   });
-  if (buffer) chunks.push({ text: buffer, lineNumber: bufferStartLine, isRealEntry: bufferIsRealEntry });
+  
+  if (buffer.trim()) {
+    chunks.push({ text: buffer, lineNumber: bufferStartLine, isRealEntry: true });
+  }
 
   const entries: ParsedEntry[] = [];
   const skipped: SkippedEntry[] = [];
