@@ -66,6 +66,7 @@ export default function AdminDashboard({
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
   const [pickupFilter, setPickupFilter] = useState<string | "all">("all");
+  const [numberingMode, setNumberingMode] = useState<"original" | "sequential">("original");
   const [showImport, setShowImport] = useState(false);
   const [showTeam, setShowTeam] = useState(false);
   const [showEventInfo, setShowEventInfo] = useState(false);
@@ -218,16 +219,25 @@ export default function AdminDashboard({
               </option>
             ))}
           </select>
+          <select
+            value={numberingMode}
+            onChange={(e) => setNumberingMode(e.target.value as "original" | "sequential")}
+            className="rounded-xl border border-cream-100/15 bg-ink-900/60 px-3 py-2 text-sm"
+          >
+            <option value="original">Original list #</option>
+            <option value="sequential">Row count #</option>
+          </select>
         </div>
       </Card>
 
       <div className="space-y-2">
-        {filtered.map((r) => (
+        {filtered.map((r, i) => (
           <RegistrantRow
             key={r.id}
             registrant={r}
             pickupPoints={pickupPoints}
             query={query}
+            displayNumber={numberingMode === "sequential" ? i + 1 : r.list_number}
             onStatusChange={async (status) => {
               setRegistrants((prev) => prev.map((x) => (x.id === r.id ? { ...x, status } : x)));
               await updateStatus(r.id, status);
@@ -515,6 +525,7 @@ function RegistrantRow({
   onPickupChange,
   onNoteChange,
   query = "",
+  displayNumber,
 }: {
   registrant: Registrant;
   pickupPoints: PickupPoint[];
@@ -522,16 +533,18 @@ function RegistrantRow({
   onPickupChange: (pickupPointId: string | null) => void;
   onNoteChange: (note: string) => void;
   query?: string;
+  displayNumber?: number | null;
 }) {
   const [showNote, setShowNote] = useState(!!r.note);
   const [note, setNote] = useState(r.note ?? "");
+  const numberToShow = displayNumber !== undefined ? displayNumber : r.list_number;
 
   return (
     <Card className="py-3">
       <div className="flex flex-wrap items-center gap-3">
         <div className="min-w-[160px] flex-1">
           <p className="font-medium">
-            {r.list_number && <span className="text-cream-100/40 mr-2">#{r.list_number}</span>}
+            {numberToShow !== null && <span className="text-cream-100/40 mr-2">#{numberToShow}</span>}
             <Highlight text={r.name} query={query} />
           </p>
           <p className="text-xs text-cream-100/50">
