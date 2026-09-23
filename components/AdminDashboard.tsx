@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { Users, Filter, MapPin, UploadCloud, ChevronLeft, ChevronRight, Trash2, Edit2, Search, CheckCircle2, AlertCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { formatKePhoneDisplay, toSearchDigits } from "@/lib/phone";
 import { parseRegistrationText, dedupeParsedEntries } from "@/lib/parse";
@@ -11,6 +12,7 @@ import {
   updateNote,
   bulkImport,
   addTeamMember,
+  removeTeamMember,
   addPickupPoint,
   updateEventInfo,
   dismissPossibleDuplicate,
@@ -45,6 +47,7 @@ interface PickupPoint {
 }
 
 const STATUS_OPTIONS: Status[] = ["not_called", "pending", "confirmed", "tentative"];
+const ITEMS_PER_PAGE = 20;
 
 export default function AdminDashboard({
   initialRegistrants,
@@ -53,6 +56,7 @@ export default function AdminDashboard({
   selfEmail,
   eventInfo,
   duplicates: initialDuplicates,
+  teamMembers: initialTeamMembers,
 }: {
   initialRegistrants: Registrant[];
   pickupPoints: PickupPoint[];
@@ -60,14 +64,18 @@ export default function AdminDashboard({
   selfEmail: string;
   eventInfo: { venue_name: string | null; venue_lat: number | null; venue_lng: number | null; faq: { q: string; a: string }[] };
   duplicates: DuplicatePair[];
+  teamMembers: any[];
 }) {
   const [registrants, setRegistrants] = useState(initialRegistrants);
   const [pickupPoints, setPickupPoints] = useState(initialPickupPoints);
+  const [teamMembers, setTeamMembers] = useState(initialTeamMembers);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
   const [pickupFilter, setPickupFilter] = useState<string | "all">("all");
   const [numberingMode, setNumberingMode] = useState<"original" | "sequential">("original");
   const [showImport, setShowImport] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
   const [showTeam, setShowTeam] = useState(false);
   const [showEventInfo, setShowEventInfo] = useState(false);
   const [showDuplicates, setShowDuplicates] = useState(false);
@@ -119,6 +127,11 @@ export default function AdminDashboard({
     for (const s of STATUS_OPTIONS) base[s] = registrants.filter((r) => r.status === s).length;
     return base;
   }, [registrants]);
+
+  useEffect(() => { setCurrentPage(1); }, [query, statusFilter, pickupFilter]);
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedRegistrants = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10">
@@ -173,6 +186,7 @@ export default function AdminDashboard({
 
       {showTeam && role === "admin" && (
         <TeamPanel
+          teamMembers={teamMembers}
           pickupPoints={pickupPoints}
           onPickupAdded={(p) => setPickupPoints((prev) => [...prev, p])}
         />
@@ -199,7 +213,7 @@ export default function AdminDashboard({
             aria-label="Filter by status"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as Status | "all")}
-            className="rounded-xl border border-cream-100/15 bg-ink-900/60 px-3 py-2 text-sm"
+            className="flex h-10 items-center justify-between rounded-md border border-ink-800 bg-ink-950 px-3 py-2 text-sm ring-offset-ink-950 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2"
           >
             <option value="all">All statuses</option>
             {STATUS_OPTIONS.map((s) => (
@@ -212,7 +226,7 @@ export default function AdminDashboard({
             aria-label="Filter by pickup point"
             value={pickupFilter}
             onChange={(e) => setPickupFilter(e.target.value)}
-            className="rounded-xl border border-cream-100/15 bg-ink-900/60 px-3 py-2 text-sm"
+            className="flex h-10 items-center justify-between rounded-md border border-ink-800 bg-ink-950 px-3 py-2 text-sm ring-offset-ink-950 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2"
           >
             <option value="all">All pickup points</option>
             {pickupPoints.map((p) => (
@@ -225,7 +239,7 @@ export default function AdminDashboard({
             aria-label="Toggle numbering mode"
             value={numberingMode}
             onChange={(e) => setNumberingMode(e.target.value as "original" | "sequential")}
-            className="rounded-xl border border-cream-100/15 bg-ink-900/60 px-3 py-2 text-sm"
+            className="flex h-10 items-center justify-between rounded-md border border-ink-800 bg-ink-950 px-3 py-2 text-sm ring-offset-ink-950 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2"
           >
             <option value="original">Original list #</option>
             <option value="sequential">Row count #</option>
@@ -233,12 +247,13 @@ export default function AdminDashboard({
         </div>
       </Card>
 
-      <div className="space-y-2">
-        {filtered.map((r, i) => (
+      <div className="border border-ink-800 rounded-xl overflow-hidden bg-ink-900 shadow-sm">
+        {paginatedRegistrants.map((r, i) => (
           <RegistrantRow
             key={r.id}
             registrant={r}
             pickupPoints={pickupPoints}
+            role={role}
             query={query}
             displayNumber={numberingMode === "sequential" ? i + 1 : r.list_number}
             onStatusChange={async (status) => {
@@ -268,18 +283,30 @@ export default function AdminDashboard({
           />
         ))}
         {filtered.length === 0 && (
-          <p className="py-10 text-center text-cream-100/40 text-sm">No matching registrants.</p>
+          <p className="py-10 text-center text-cream-200 text-sm">No matching registrants.</p>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between border-t border-ink-800 pt-4">
+          <p className="text-sm text-cream-200">
+            Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length} entries
+          </p>
+          <div className="flex gap-2">
+            <Button variant="secondary" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}><ChevronLeft className="h-4 w-4" /> Prev</Button>
+            <Button variant="secondary" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>Next <ChevronRight className="h-4 w-4" /></Button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <Card className="p-4 text-center">
-      <p className="text-2xl font-medium text-gold-400">{value}</p>
-      <p className="text-xs text-cream-100/50 mt-1">{label}</p>
+    <Card className="p-4 flex flex-col justify-center border border-ink-800 shadow-sm bg-ink-950">
+      <p className="text-3xl font-bold text-cream-50">{value}</p>
+      <p className="text-xs text-cream-200 mt-1">{label}</p>
     </Card>
   );
 }
@@ -318,7 +345,7 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
   return (
     <Card className="mb-4">
       <h2 className="mb-2 text-lg">Import from WhatsApp</h2>
-      <p className="mb-3 text-sm text-cream-100/50">
+      <p className="mb-3 text-sm text-cream-200">
         Paste one or more pasted message blocks below. We'll parse, normalize phone numbers,
         and skip anything already on the list.
       </p>
@@ -327,7 +354,7 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
         onChange={(e) => setText(e.target.value)}
         rows={8}
         placeholder="Paste the WhatsApp list text here…"
-        className="w-full rounded-xl border border-cream-100/15 bg-ink-900/60 p-3 text-sm outline-none focus:border-gold-500"
+        className="w-full rounded-xl border border-ink-800 bg-ink-950 p-3 text-sm outline-none focus:border-gold-500"
       />
       <div className="mt-3 flex gap-2">
         <Button variant="ghost" onClick={runPreview} disabled={!text.trim()}>
@@ -341,7 +368,7 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
       </div>
       {preview && (
         <div className="mt-3">
-          <p className="text-sm text-cream-100/60 mb-2">
+          <p className="text-sm text-cream-200 mb-2">
             Found {preview.unique.length} new, {preview.duplicatesWithinPaste.length} repeated
             within this paste.
           </p>
@@ -350,16 +377,16 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
               <p className="text-warning-400 font-medium mb-2">Needs Manual Review:</p>
               {preview.invalidPhone.length > 0 && (
                 <div className="mb-2">
-                  <span className="text-cream-100/80">Unreadable phone numbers ({preview.invalidPhone.length}):</span>
-                  <ul className="list-disc pl-5 text-cream-100/50 mt-1">
+                  <span className="text-cream-100">Unreadable phone numbers ({preview.invalidPhone.length}):</span>
+                  <ul className="list-disc pl-5 text-cream-200 mt-1">
                     {preview.invalidPhone.map((e, i) => <li key={i}>{e.name} - {e.phoneRaw}</li>)}
                   </ul>
                 </div>
               )}
               {preview.skipped.length > 0 && (
                 <div>
-                  <span className="text-cream-100/80">Skipped lines (no phone found) ({preview.skipped.length}):</span>
-                  <ul className="list-disc pl-5 text-cream-100/50 mt-1">
+                  <span className="text-cream-100">Skipped lines (no phone found) ({preview.skipped.length}):</span>
+                  <ul className="list-disc pl-5 text-cream-200 mt-1">
                     {preview.skipped.map((s, i) => <li key={i}><span className="text-cream-100/30 mr-1">L{s.lineNumber}</span>{s.rawText}</li>)}
                   </ul>
                 </div>
@@ -379,9 +406,11 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
 }
 
 function TeamPanel({
+  teamMembers,
   pickupPoints,
   onPickupAdded,
 }: {
+  teamMembers: any[];
   pickupPoints: PickupPoint[];
   onPickupAdded: (p: PickupPoint) => void;
 }) {
@@ -393,8 +422,8 @@ function TeamPanel({
   return (
     <Card className="mb-4 space-y-5">
       <div>
-        <h2 className="mb-2 text-lg">Add a team member</h2>
-        <div className="flex flex-wrap gap-2">
+        <h2 className="mb-2 text-lg">Team members</h2>
+        <div className="flex flex-wrap gap-2 mb-4">
           <Input
             placeholder="their@email.com"
             value={email}
@@ -404,7 +433,7 @@ function TeamPanel({
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as "caller" | "admin")}
-            className="rounded-xl border border-cream-100/15 bg-ink-900/60 px-3 py-2 text-sm"
+            className="flex h-10 items-center justify-between rounded-md border border-ink-800 bg-ink-950 px-3 py-2 text-sm ring-offset-ink-950 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2"
           >
             <option value="caller">Caller</option>
             <option value="admin">Admin</option>
@@ -413,17 +442,39 @@ function TeamPanel({
             onClick={async () => {
               const res = await addTeamMember(email, role);
               setMsg(res.error ? res.error : `Added ${email} as ${role}`);
-              if (!res.error) setEmail("");
+              if (!res.error) {
+                setEmail("");
+                window.location.reload();
+              }
             }}
           >
             Add
           </Button>
         </div>
-        {msg && <p className="mt-2 text-sm text-cream-100/60">{msg}</p>}
+        {msg && <p className="mb-4 text-sm text-cream-200">{msg}</p>}
+
+        <ul className="space-y-1 text-sm text-cream-100">
+          {teamMembers.map((m) => (
+            <li key={m.id} className="flex justify-between border-b border-ink-800 py-1">
+              <span>{m.email} ({m.role})</span>
+              <button 
+                onClick={async () => {
+                  if (window.confirm(`Remove ${m.email} from the team?`)) {
+                    await removeTeamMember(m.id);
+                    window.location.reload();
+                  }
+                }}
+                className="text-red-400/80 hover:text-red-400 underline"
+              >
+                Remove
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
       <div>
         <h2 className="mb-2 text-lg">Pickup points</h2>
-        <p className="mb-2 text-sm text-cream-100/50">
+        <p className="mb-2 text-sm text-cream-200">
           {pickupPoints.map((p) => p.name).join(" · ") || "None yet"}
         </p>
         <div className="flex gap-2">
@@ -497,21 +548,21 @@ function EventInfoPanel({
             className="w-40"
           />
         </div>
-        <p className="mt-1 text-xs text-cream-100/40">
+        <p className="mt-1 text-xs text-cream-200">
           Leave lat/lng blank until the exact pin is confirmed — the public page shows
           "to be confirmed" until then.
         </p>
       </div>
       <div>
         <h2 className="mb-2 text-lg">FAQ</h2>
-        <p className="mb-2 text-xs text-cream-100/40">
+        <p className="mb-2 text-xs text-cream-200">
           One entry per block, separated by a blank line, each as "Q: …" then "A: …".
         </p>
         <textarea
           value={faqText}
           onChange={(e) => setFaqText(e.target.value)}
           rows={10}
-          className="w-full rounded-xl border border-cream-100/15 bg-ink-900/60 p-3 text-sm outline-none focus:border-gold-500"
+          className="w-full rounded-xl border border-ink-800 bg-ink-950 p-3 text-sm outline-none focus:border-gold-500"
         />
       </div>
       <Button
@@ -530,7 +581,7 @@ function EventInfoPanel({
       >
         {saving ? "Saving…" : "Save"}
       </Button>
-      {msg && <p className="text-sm text-cream-100/60">{msg}</p>}
+      {msg && <p className="text-sm text-cream-200">{msg}</p>}
     </Card>
   );
 }
@@ -538,6 +589,7 @@ function EventInfoPanel({
 function RegistrantRow({
   registrant: r,
   pickupPoints,
+  role,
   onStatusChange,
   onPickupChange,
   onNoteChange,
@@ -547,6 +599,7 @@ function RegistrantRow({
 }: {
   registrant: Registrant;
   pickupPoints: PickupPoint[];
+  role: "admin" | "caller";
   onStatusChange: (status: Status) => void;
   onPickupChange: (pickupPointId: string | null) => void;
   onNoteChange: (note: string) => void;
@@ -559,21 +612,21 @@ function RegistrantRow({
   const numberToShow = displayNumber !== undefined ? displayNumber : r.list_number;
 
   return (
-    <Card className="py-3">
+    <div className="py-2 border-b border-ink-800 last:border-0 hover:bg-ink-800/30 transition-colors">
       <div className="flex flex-wrap items-center gap-3">
         <div className="min-w-[160px] flex-1">
           <p className="font-medium">
-            {numberToShow !== null && <span className="text-cream-100/40 mr-2">#{numberToShow}</span>}
+            {numberToShow !== null && <span className="text-cream-200 mr-2">#{numberToShow}</span>}
             <Highlight text={r.name} query={query} />
           </p>
-          <p className="text-xs text-cream-100/50">
+          <p className="text-xs text-cream-200">
             <Highlight text={formatKePhoneDisplay(r.phone_canonical)} query={query.replace(/\D/g, "")} />
           </p>
         </div>
         <select
           value={r.status}
           onChange={(e) => onStatusChange(e.target.value as Status)}
-          className="rounded-full border border-cream-100/15 bg-ink-900/60 px-3 py-1.5 text-xs"
+          className="rounded-full border border-ink-800 bg-ink-950 px-3 py-1.5 text-xs"
         >
           {STATUS_OPTIONS.map((s) => (
             <option key={s} value={s}>
@@ -584,7 +637,7 @@ function RegistrantRow({
         <select
           value={r.pickup_point_id ?? ""}
           onChange={(e) => onPickupChange(e.target.value || null)}
-          className="rounded-full border border-cream-100/15 bg-ink-900/60 px-3 py-1.5 text-xs"
+          className="rounded-full border border-ink-800 bg-ink-950 px-3 py-1.5 text-xs"
         >
           <option value="">No pickup point</option>
           {pickupPoints.map((p) => (
@@ -597,21 +650,11 @@ function RegistrantRow({
         <button
           type="button"
           onClick={() => setShowNote((v) => !v)}
-          className="text-xs text-cream-100/40 underline hover:text-cream-100/70"
+          className="text-xs text-cream-200 underline hover:text-cream-100/70"
         >
           {r.note ? "Note" : "+ note"}
         </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (window.confirm(`Are you sure you want to permanently delete ${r.name}?`)) {
-              onDelete();
-            }
-          }}
-          className="text-xs text-red-400/60 underline hover:text-red-400"
-        >
-          Delete
-        </button>
+        {role === "admin" && (<button type="button" onClick={() => { if (window.confirm(`Are you sure you want to permanently delete ${r.name}?`)) { onDelete(); } }} className="text-xs text-red-400/60 underline hover:text-red-400">Delete</button>)}
       </div>
       {showNote && (
         <div className="mt-2 flex gap-2">
@@ -626,7 +669,7 @@ function RegistrantRow({
           />
         </div>
       )}
-    </Card>
+    </div>
   );
 }
 
@@ -642,28 +685,28 @@ function DuplicatesPanel({
   return (
     <Card className="mb-4">
       <h2 className="mb-1 text-lg">Possible duplicates</h2>
-      <p className="mb-3 text-sm text-cream-100/50">
+      <p className="mb-3 text-sm text-cream-200">
         Same or very similar name, different phone number — never auto-merged. Confirm each
         one: if they're genuinely different people, dismiss; if it's the same person under a
         second number, remove the extra entry.
       </p>
       {duplicates.length === 0 && (
-        <p className="text-sm text-cream-100/40">None right now.</p>
+        <p className="text-sm text-cream-200">None right now.</p>
       )}
-      <div className="space-y-2">
+      <div className="border border-ink-800 rounded-xl overflow-hidden bg-ink-900 shadow-sm">
         {duplicates.map((d) => (
           <div
             key={d.id}
-            className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-cream-100/10 p-3 text-sm"
+            className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-ink-800 p-3 text-sm"
           >
             <div>
               <p>
                 <span className="font-medium">{d.name}</span>{" "}
-                <span className="text-cream-100/50">({formatKePhoneDisplay(d.phone_canonical)})</span>
+                <span className="text-cream-200">({formatKePhoneDisplay(d.phone_canonical)})</span>
               </p>
-              <p className="text-cream-100/40 text-xs">
+              <p className="text-cream-200 text-xs">
                 looks like{" "}
-                <span className="text-cream-100/60">{d.matched_name}</span>{" "}
+                <span className="text-cream-200">{d.matched_name}</span>{" "}
                 ({formatKePhoneDisplay(d.matched_phone)})
               </p>
             </div>
@@ -739,3 +782,20 @@ function Highlight({ text, query }: { text: string; query: string }) {
     </>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
