@@ -255,6 +255,16 @@ export default function AdminDashboard({
               setRegistrants((prev) => prev.map((x) => (x.id === r.id ? { ...x, note } : x)));
               await updateNote(r.id, note);
             }}
+            onDelete={async () => {
+              // Optimistic update
+              setRegistrants((prev) => prev.filter((x) => x.id !== r.id));
+              const { error } = await removeRegistrant(r.id, "Admin manually deleted row");
+              if (error) {
+                alert("Failed to delete: " + error);
+                // Revert on error (naively reload the whole page to resync)
+                window.location.reload();
+              }
+            }}
           />
         ))}
         {filtered.length === 0 && (
@@ -531,6 +541,7 @@ function RegistrantRow({
   onStatusChange,
   onPickupChange,
   onNoteChange,
+  onDelete,
   query = "",
   displayNumber,
 }: {
@@ -539,6 +550,7 @@ function RegistrantRow({
   onStatusChange: (status: Status) => void;
   onPickupChange: (pickupPointId: string | null) => void;
   onNoteChange: (note: string) => void;
+  onDelete: () => void;
   query?: string;
   displayNumber?: number | null;
 }) {
@@ -588,6 +600,17 @@ function RegistrantRow({
           className="text-xs text-cream-100/40 underline hover:text-cream-100/70"
         >
           {r.note ? "Note" : "+ note"}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (window.confirm(`Are you sure you want to permanently delete ${r.name}?`)) {
+              onDelete();
+            }
+          }}
+          className="text-xs text-red-400/60 underline hover:text-red-400"
+        >
+          Delete
         </button>
       </div>
       {showNote && (
