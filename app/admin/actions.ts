@@ -49,11 +49,12 @@ export async function bulkImport(
   for (let i = 0; i < entries.length; i += chunkSize) {
     const chunk = entries.slice(i, i + chunkSize);
     const results = await Promise.all(
-      chunk.map((entry) =>
+      chunk.map((entry, j) =>
         supabase.rpc("register_person", {
           p_name: entry.name,
           p_phone: entry.phoneRaw,
           p_source: "bulk_import",
+          p_list_number: i + j + 1,   // 1-based ordinal from the original paste
         })
       )
     );

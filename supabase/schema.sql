@@ -30,7 +30,8 @@ create table if not exists registrants (
   pickup_point_id uuid references pickup_points(id),
   note text,
   source registrant_source not null default 'bulk_import',
-  possible_duplicate_of uuid references registrants(id),
+  list_number integer,                                          -- ordinal position from original import list
+  possible_duplicate_of uuid references registrants(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -141,7 +142,12 @@ grant select on public_registrants to anon, authenticated;
 
 -- ---------- Self-registration RPC (used by both the public form and bulk import) ----------
 
-create or replace function register_person(p_name text, p_phone text, p_source registrant_source default 'self_registered')
+create or replace function register_person(
+  p_name text,
+  p_phone text,
+  p_source registrant_source default 'self_registered',
+  p_list_number integer default null
+)
 returns table(result text, id uuid) as $$
 declare
   v_phone text;
@@ -173,8 +179,8 @@ begin
   order by similarity(r.name, trim(p_name)) desc
   limit 1;
 
-  insert into registrants (name, phone_raw, phone_canonical, source, possible_duplicate_of)
-  values (trim(p_name), p_phone, v_phone, p_source, v_possible_dup)
+  insert into registrants (name, phone_raw, phone_canonical, source, list_number, possible_duplicate_of)
+  values (trim(p_name), p_phone, v_phone, p_source, p_list_number, v_possible_dup)
   returning registrants.id into v_new_id;
 
   return query select 'inserted'::text, v_new_id;
@@ -294,3 +300,8 @@ do $$ begin
     add constraint registrants_possible_duplicate_of_fkey
     foreign key (possible_duplicate_of) references registrants(id) on delete set null;
 exception when duplicate_object then null; end $$;
+
+-- Migration guard: add list_number if this is an existing DB that pre-dates the column
+do $$ begin
+  alter table registrants add column list_number integer;
+exception when duplicate_column then null; end $$;
