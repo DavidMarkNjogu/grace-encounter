@@ -4,23 +4,30 @@ export function Button({
   className = "",
   variant = "primary",
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "ghost" }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "ghost" | "destructive" }) {
   const base =
-    "inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed";
-  const styles =
-    variant === "primary"
-      ? "bg-gradient-to-b from-gold-400 to-gold-600 text-ink-950 font-semibold hover:brightness-110 shadow-lifted ring-1 ring-gold-300/40"
-      : "border border-cream-100/20 text-cream-50 hover:bg-cream-50/5 hover:border-cream-100/40";
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-ink-950 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2";
+  
+  let styles = "";
+  if (variant === "primary") {
+    styles = "bg-white text-ink-950 hover:bg-zinc-200";
+  } else if (variant === "secondary") {
+    styles = "bg-ink-800 text-cream-50 hover:bg-ink-700 border border-ink-700";
+  } else if (variant === "destructive") {
+    styles = "bg-red-500/10 text-red-500 hover:bg-red-500/20";
+  } else {
+    // ghost
+    styles = "hover:bg-ink-800 hover:text-cream-50 text-cream-100";
+  }
+
   return <button className={`${base} ${styles} ${className}`} {...props} />;
 }
 
-export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
+export function Input({ className = "", ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
+      className={`flex h-10 w-full rounded-md border border-ink-800 bg-ink-950 px-3 py-2 text-sm ring-offset-ink-950 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-cream-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all ${className}`}
       {...props}
-      className={`w-full rounded-xl border border-cream-100/15 bg-ink-900/60 px-4 py-3 text-cream-50 placeholder:text-cream-200/70 outline-none focus:border-gold-500 focus:ring-2 focus:ring-gold-500/30 ${
-        props.className ?? ""
-      }`}
     />
   );
 }
@@ -28,18 +35,17 @@ export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
 export function Card({ className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={`rounded-2xl border border-cream-100/10 bg-ink-900/50 p-6 shadow-lifted backdrop-blur-sm ${className}`}
+      className={`rounded-xl border border-ink-800 bg-ink-900 text-cream-50 shadow-sm ${className}`}
       {...props}
     />
   );
 }
 
-// Flatter, no-shadow variant for static list rows (search results) so they
-// don't visually read as clickable the way action Cards do.
+// Minimal row design for static lists
 export function ListRow({ className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={`rounded-xl border border-cream-100/10 bg-ink-900/30 px-4 py-3 ${className}`}
+      className={`rounded-lg border border-ink-800 bg-ink-950/50 px-4 py-3 hover:bg-ink-800/50 transition-colors ${className}`}
       {...props}
     />
   );
@@ -51,17 +57,18 @@ const STATUS_LABEL: Record<string, string> = {
   confirmed: "Confirmed",
   tentative: "Tentative",
 };
+
 const STATUS_COLOR: Record<string, string> = {
-  not_called: "bg-ink-700 text-cream-100/70",
-  pending: "bg-pending-500/25 text-pending-500",
-  confirmed: "bg-ok-500/25 text-ok-500",
-  tentative: "bg-warn-500/25 text-warn-500",
+  not_called: "bg-ink-800 text-cream-100",
+  pending: "bg-blue-500/10 text-blue-500 border border-blue-500/20",
+  confirmed: "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20",
+  tentative: "bg-amber-500/10 text-amber-500 border border-amber-500/20",
 };
 
 export function StatusBadge({ status }: { status: string }) {
   return (
     <span
-      className={`rounded-full px-3 py-1 text-xs font-medium ${
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
         STATUS_COLOR[status] ?? STATUS_COLOR.not_called
       }`}
     >

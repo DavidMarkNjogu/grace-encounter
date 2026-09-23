@@ -1,65 +1,60 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Manrope:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @theme {
-  --color-ink-950: #0a0f1f;
-  --color-ink-900: #0f1830;
-  --color-ink-800: #17244a;
-  --color-ink-700: #223362;
-  --color-ink-600: #2f4478;
+  /* Redefining the 'slop' palette to a clean, premium Shadcn Zinc dark theme */
+  --color-ink-950: #09090b; /* Zinc 950 */
+  --color-ink-900: #18181b; /* Zinc 900 */
+  --color-ink-800: #27272a; /* Zinc 800 */
+  --color-ink-700: #3f3f46; /* Zinc 700 */
+  --color-ink-600: #52525b; /* Zinc 600 */
 
-  --color-gold-300: #f8d68f;
-  --color-gold-400: #f2b23e;
-  --color-gold-500: #e8931f;
-  --color-gold-600: #c9701a;
+  --color-gold-300: #e4e4e7; /* Light gray for hovers instead of gold */
+  --color-gold-400: #fafafa; /* Pure white for primary accents */
+  --color-gold-500: #f4f4f5; /* Off-white */
+  --color-gold-600: #d4d4d8; 
 
-  --color-cream-50: #fbf6ea;
-  --color-cream-100: #ecdcb8;
-  --color-cream-200: #d8c7a3;
-  --color-ok-300: #7fdba0;
+  --color-cream-50: #ffffff;
+  --color-cream-100: #a1a1aa; /* Muted text (Zinc 400) */
+  --color-cream-200: #71717a; /* Subdued text (Zinc 500) */
 
-  --color-ok-500: #4d9d6f;
-  --color-warn-500: #d69a3a;
-  --color-pending-500: #8b9dc3;
+  --color-ok-300: #6ee7b7;
+  --color-ok-500: #10b981;
+  --color-warn-500: #f59e0b;
+  --color-pending-500: #3b82f6;
 
-  --font-display: "Fraunces", "Georgia", serif;
-  --font-sans: "Manrope", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
 
-  --shadow-lifted: 0 18px 40px -12px rgb(5 8 18 / 0.55);
+  --shadow-lifted: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
 @layer base {
-  html { background: var(--color-ink-950); min-height: 100%; }
-  body { min-height: 100vh;
-    /* Asymmetric sunburst, top-right, echoing the poster's light source,
-       plus a faint grain so flat dark cards don't read as generic-AI-slop flat. */
-    background:
-      radial-gradient(900px 700px at 82% -8%, color-mix(in srgb, var(--color-gold-500) 30%, transparent), transparent 60%),
-      radial-gradient(600px 500px at 8% 8%, color-mix(in srgb, var(--color-ink-600) 55%, transparent), transparent 70%),
-      var(--color-ink-950);
-    background-attachment: fixed;
+  html { 
+    background: var(--color-ink-950); 
+    min-height: 100%; 
+    color-scheme: dark;
+  }
+  body { 
+    min-height: 100vh;
+    background: var(--color-ink-950);
     color: var(--color-cream-50);
     font-family: var(--font-sans);
-    position: relative;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0.05;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-  h1, h2, h3 {
+  
+  h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    letter-spacing: -0.01em;
-    font-weight: 500;
+    letter-spacing: -0.025em;
+    font-weight: 600;
   }
+
   select {
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23ecdcb8'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 0.9rem center;
-    padding-right: 2.2rem !important;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+    padding-right: 2.5rem !important;
   }
 }
