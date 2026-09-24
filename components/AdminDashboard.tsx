@@ -236,7 +236,7 @@ export default function AdminDashboard({
             aria-label="Filter by status"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as Status | "all")}
-            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
           >
             <option value="all">All statuses</option>
             {STATUS_OPTIONS.map((s) => (
@@ -249,7 +249,7 @@ export default function AdminDashboard({
             aria-label="Filter by pickup point"
             value={pickupFilter}
             onChange={(e) => setPickupFilter(e.target.value)}
-            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
           >
             <option value="all">All pickup points</option>
             {pickupPoints.map((p) => (
@@ -262,7 +262,7 @@ export default function AdminDashboard({
             aria-label="Toggle numbering mode"
             value={numberingMode}
             onChange={(e) => setNumberingMode(e.target.value as "original" | "sequential")}
-            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
           >
             <option value="original">Original list #</option>
             <option value="sequential">Row count #</option>
@@ -667,7 +667,7 @@ function TeamPanel({
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as "caller" | "admin")}
-            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
           >
             <option value="caller">Caller</option>
             <option value="admin">Admin</option>
@@ -859,7 +859,7 @@ function RegistrantRow({
           <select
             value={r.status}
             onChange={(e) => onStatusChange(e.target.value as Status)}
-            className="rounded-md border border-line bg-surface-2 px-2.5 py-1.5 text-xs text-ink-800 shadow-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+            className="rounded-md border border-line bg-surface-2 px-2.5 py-1.5 text-xs text-ink-800 shadow-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer"
           >
             {STATUS_OPTIONS.map((s) => (
               <option key={s} value={s}>
@@ -872,7 +872,7 @@ function RegistrantRow({
           <select
             value={r.pickup_point_id ?? ""}
             onChange={(e) => onPickupChange(e.target.value || null)}
-            className="rounded-md border border-line bg-surface-2 px-2.5 py-1.5 text-xs text-ink-800 shadow-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+            className="rounded-md border border-line bg-surface-2 px-2.5 py-1.5 text-xs text-ink-800 shadow-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer"
           >
             <option value="">No pickup point</option>
             {pickupPoints.map((p) => (
