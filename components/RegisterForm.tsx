@@ -19,6 +19,7 @@ export default function RegisterForm() {
       p_name: name,
       p_phone: phone,
       p_source: "self_registered",
+        p_list_number: null,
     });
     setSubmitting(false);
     if (error) {
