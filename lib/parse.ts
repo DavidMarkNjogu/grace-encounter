@@ -1,4 +1,4 @@
-﻿import { normalizeKePhone } from "./phone";
+import { normalizeKePhone } from "./phone";
 
 export interface ParsedEntry {
   name: string;
@@ -21,7 +21,27 @@ const PHONE_RE = /(\+?254[\s-]?\d[\d\s-]{6,12}\d|0\d[\d\s-]{6,10}\d)/;
 const ENTRY_BOUNDARY_RE = /^([O0]?\d{1,4})\s*[.):-]?\s*/i;
 const LIST_NUMBER_EXTRACT_RE = /^([O0]?\d{1,4})\s*[.):-]?/i;
 const BOILERPLATE_RE =
-  /^(read more|register now\.*|name\.\s*phone|kindly note|grace (encounter|arena)|free transport|nairobi[\s-]*kenya|nakuru to uhuru park|entry free|venue|for more info)/i;
+  /^(read more|register\s*(now|here|below)?\.?$|name\.?\s*phone|kindly\s*(note|register)|grace\s*(encounter|arena)|free transport|nairobi[\s-]*kenya|nakuru to uhuru park|entry free|venue|for more info|how to register|instructions?:?)/i;
+
+/** Strip leading numbers, trailing junk, and Title Case proper nouns */
+function cleanName(raw: string): string {
+  let n = raw
+    // Strip any leading digits + punctuation that the boundary regex missed (e.g. "8.David")
+    .replace(/^\d{1,4}\s*[.):-]\s*/g, "")
+    // Strip trailing dashes, dots, colons, underscores, commas
+    .replace(/[\s\-\u2013\u2014_.:,;]+$/g, "")
+    // Collapse whitespace
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Title Case: capitalize the first letter of each word (proper nouns)
+  n = n
+    .split(" ")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+
+  return n;
+}
 
 function normalizeUnicodeLetters(text: string): string {
   return text.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
@@ -84,11 +104,12 @@ export function parseRegistrationText(raw: string): {
     }
 
     const phoneRaw = phoneMatch[0].trim();
-    const name = withoutIndex
+    const rawName = withoutIndex
       .slice(0, phoneMatch.index)
-      .replace(/[-–—_.:]+$/, "")
-      .replace(/\s+/g, " ")
       .trim();
+
+    // Apply the cleanName pipeline: strip residual numbers, trailing junk, Title Case
+    const name = cleanName(rawName);
 
     if (!name) {
       skipped.push({ rawText: chunk.text, reason: "no_phone_found", lineNumber: chunk.lineNumber });

@@ -131,3 +131,54 @@ export async function removeTeamMember(id: string) {
   revalidatePath("/admin");
   return { error: error?.message ?? null };
 }
+
+/** Clean all existing names in the database: strip leading numbers, trailing junk, Title Case */
+export async function cleanAllNames(): Promise<{ updated: number; errors: number }> {
+  const supabase = createClient();
+  const { data: rows, error } = await supabase
+    .from("registrants")
+    .select("id, name");
+
+  if (error || !rows) return { updated: 0, errors: 1 };
+
+  function cleanName(raw: string): string {
+    let n = raw
+      // Strip any leading digits + punctuation (e.g. "8.David", "15.Willie")
+      .replace(/^\d{1,4}\s*[.):\-]\s*/g, "")
+      // Strip trailing dashes, dots, colons, underscores, commas
+      .replace(/[\s\-\u2013\u2014_.:,;]+$/g, "")
+      // Collapse whitespace
+      .replace(/\s+/g, " ")
+      .trim();
+    // Title Case: capitalize the first letter of each word
+    n = n
+      .split(" ")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+    return n;
+  }
+
+  let updated = 0;
+  let errors = 0;
+
+  // Batch updates in chunks of 20
+  const toUpdate = rows
+    .map((r) => ({ id: r.id, oldName: r.name, newName: cleanName(r.name) }))
+    .filter((r) => r.oldName !== r.newName);
+
+  for (const row of toUpdate) {
+    const { error: updateErr } = await supabase
+      .from("registrants")
+      .update({ name: row.newName })
+      .eq("id", row.id);
+    if (updateErr) {
+      errors++;
+    } else {
+      updated++;
+    }
+  }
+
+  await logAction("clean_all_names", null, { updated, errors, total: rows.length });
+  revalidatePath("/admin");
+  return { updated, errors };
+}

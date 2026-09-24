@@ -17,6 +17,7 @@ import {
   updateEventInfo,
   dismissPossibleDuplicate,
   removeRegistrant,
+  cleanAllNames,
 } from "@/app/admin/actions";
 
 type Status = "not_called" | "pending" | "confirmed" | "tentative";
@@ -159,6 +160,20 @@ export default function AdminDashboard({
           {role === "admin" && (
             <Button variant="ghost" onClick={() => setShowEventInfo((v) => !v)}>
               FAQ &amp; venue
+            </Button>
+          )}
+          {role === "admin" && (
+            <Button 
+              variant="ghost" 
+              onClick={async () => { 
+                if(window.confirm('Clean all names in the database? (Strips leading numbers, trailing junk, Title Cases)')) { 
+                  const res = await cleanAllNames(); 
+                  alert('Updated: ' + res.updated + ' | Errors: ' + res.errors); 
+                  window.location.reload(); 
+                } 
+              }}
+            >
+              Clean Names
             </Button>
           )}
         </div>
