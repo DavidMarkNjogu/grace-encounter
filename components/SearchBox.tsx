@@ -17,7 +17,7 @@ function highlight(text: string, query: string) {
   return (
     <>
       {text.slice(0, idx)}
-      <mark className="rounded bg-gold-500/40 text-cream-50 px-0.5">
+      <mark className="rounded bg-primary-soft text-primary-3 px-0.5">
         {text.slice(idx, idx + query.length)}
       </mark>
       {text.slice(idx + query.length)}
@@ -62,18 +62,18 @@ export default function SearchBox() {
         onChange={(e) => setQuery(e.target.value)}
         aria-label="Search registration list"
       />
-      {loading && <p className="text-sm text-cream-200">Searching…</p>}
+      {loading && <p className="text-sm text-ink-soft">Searching…</p>}
       {!loading && query.trim().length >= 2 && (
         <div className="space-y-2">
           {results.length === 0 && (
-            <p className="text-sm text-cream-200">
+            <p className="text-sm text-ink-soft">
               No match yet — you can add your details below.
             </p>
           )}
           {results.map((r) => (
             <ListRow key={r.id} className="flex items-center justify-between">
               <span>{highlight(r.name, query)}</span>
-              <span className="text-cream-200 text-sm">
+              <span className="text-ink-soft text-sm">
                 {maskKePhoneDisplay(r.phone_canonical)}
               </span>
             </ListRow>

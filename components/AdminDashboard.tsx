@@ -214,7 +214,7 @@ export default function AdminDashboard({
             aria-label="Filter by status"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as Status | "all")}
-            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-ink-950 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2"
+            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           >
             <option value="all">All statuses</option>
             {STATUS_OPTIONS.map((s) => (
@@ -227,7 +227,7 @@ export default function AdminDashboard({
             aria-label="Filter by pickup point"
             value={pickupFilter}
             onChange={(e) => setPickupFilter(e.target.value)}
-            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-ink-950 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2"
+            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           >
             <option value="all">All pickup points</option>
             {pickupPoints.map((p) => (
@@ -240,7 +240,7 @@ export default function AdminDashboard({
             aria-label="Toggle numbering mode"
             value={numberingMode}
             onChange={(e) => setNumberingMode(e.target.value as "original" | "sequential")}
-            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-ink-950 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2"
+            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           >
             <option value="original">Original list #</option>
             <option value="sequential">Row count #</option>
@@ -419,8 +419,8 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
   if (reviewMode && reviewIndex < reviewItems.length) {
     const item = reviewItems[reviewIndex];
     return (
-      <Card className="mb-6 bg-surface-2 border-gold-500/30 p-5 shadow-lg">
-        <h2 className="mb-4 text-xl font-medium text-gold-400 flex items-center gap-2">
+      <Card className="mb-6 bg-surface-2 border-primary/30 p-5 shadow-lg">
+        <h2 className="mb-4 text-xl font-medium text-primary flex items-center gap-2">
            <AlertCircle className="h-6 w-6" />
            Manual Review ({reviewIndex + 1} of {reviewItems.length})
         </h2>
@@ -432,11 +432,11 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
         <div className="flex flex-col gap-4 mb-6">
            <div>
              <label className="text-xs font-medium text-ink-soft mb-1.5 block">Correct Name</label>
-             <input value={reviewName} onChange={e => setReviewName(e.target.value)} className="w-full bg-surface border border-line px-3 py-2.5 rounded-md text-sm outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500/50" placeholder="E.g. John Doe" />
+             <input value={reviewName} onChange={e => setReviewName(e.target.value)} className="w-full bg-surface border border-line px-3 py-2.5 rounded-md text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/50" placeholder="E.g. John Doe" />
            </div>
            <div>
              <label className="text-xs font-medium text-ink-soft mb-1.5 block">Correct Phone</label>
-             <input value={reviewPhone} onChange={e => setReviewPhone(e.target.value)} className="w-full bg-surface border border-line px-3 py-2.5 rounded-md text-sm outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500/50" placeholder="07xx xxx xxx" />
+             <input value={reviewPhone} onChange={e => setReviewPhone(e.target.value)} className="w-full bg-surface border border-line px-3 py-2.5 rounded-md text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/50" placeholder="07xx xxx xxx" />
            </div>
         </div>
 
@@ -462,7 +462,7 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
         onChange={(e) => setText(e.target.value)}
         rows={8}
         placeholder="Paste the WhatsApp list text here..."
-        className="w-full rounded-xl border border-line bg-surface p-3 text-sm outline-none focus:border-gold-500"
+        className="w-full rounded-xl border border-line bg-surface p-3 text-sm outline-none focus:border-primary"
       />
       <div className="mt-3 flex gap-2">
         <Button variant="ghost" onClick={runPreview} disabled={!text.trim()}>
@@ -481,9 +481,9 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
             within this paste.
           </p>
           {reviewItems.length > 0 && (
-            <div className="bg-surface-2/40 p-3 rounded-lg border border-warning-500/20 text-sm">
+            <div className="bg-surface-2/40 p-3 rounded-lg border border-warn/20 text-sm">
               <div className="flex justify-between items-center mb-2">
-                 <p className="text-warning-400 font-medium">Needs Manual Review ({reviewItems.length})</p>
+                 <p className="text-warn font-medium">Needs Manual Review ({reviewItems.length})</p>
                  <Button variant="secondary" onClick={() => setReviewMode(true)} className="py-1 h-8 text-xs">Review Now</Button>
               </div>
               <p className="text-ink-soft text-xs">Some items couldn't be parsed automatically. Click review to fix them.</p>
@@ -528,7 +528,7 @@ function TeamPanel({
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as "caller" | "admin")}
-            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-ink-950 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2"
+            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           >
             <option value="caller">Caller</option>
             <option value="admin">Admin</option>
@@ -657,7 +657,7 @@ function EventInfoPanel({
           value={faqText}
           onChange={(e) => setFaqText(e.target.value)}
           rows={10}
-          className="w-full rounded-xl border border-line bg-surface p-3 text-sm outline-none focus:border-gold-500"
+          className="w-full rounded-xl border border-line bg-surface p-3 text-sm outline-none focus:border-primary"
         />
       </div>
       <Button
@@ -888,7 +888,7 @@ function Highlight({ text, query }: { text: string; query: string }) {
     <>
       {parts.map((part, i) =>
         part.toLowerCase() === q.toLowerCase() ? (
-          <mark key={i} className="bg-gold-500/40 text-gold-200 px-0.5 rounded not-italic">
+          <mark key={i} className="bg-primary-soft text-primary-3 px-0.5 rounded not-italic">
             {part}
           </mark>
         ) : (

@@ -19,7 +19,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     return (
       <main className="mx-auto max-w-sm px-5 py-24 text-center">
         <h1 className="text-xl mb-2">Not on the team list</h1>
-        <p className="text-sm text-cream-100/60">
+        <p className="text-sm text-ink-soft">
           {user.email} isn't registered as an admin or caller yet. Ask an existing admin to add you.
         </p>
       </main>

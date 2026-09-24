@@ -10,14 +10,14 @@ export function Button({
   
   let styles = "";
   if (variant === "primary") {
-    styles = "bg-white text-ink-950 hover:bg-zinc-200";
+    styles = "bg-primary text-white hover:bg-primary-2 shadow-sm";
   } else if (variant === "secondary") {
-    styles = "bg-ink-800 text-ink-900 hover:bg-ink-700 border border-ink-700";
+    styles = "bg-surface text-ink-900 hover:bg-surface-2 border border-line";
   } else if (variant === "destructive") {
-    styles = "bg-red-500/10 text-red-500 hover:bg-red-500/20";
+    styles = "bg-danger-bg text-danger hover:bg-red-200";
   } else {
     // ghost
-    styles = "hover:bg-ink-800 hover:text-ink-900 text-ink";
+    styles = "hover:bg-surface-2 text-ink-700 hover:text-ink-900";
   }
 
   return <button className={`${base} ${styles} ${className}`} {...props} />;
@@ -45,7 +45,7 @@ export function Card({ className = "", ...props }: React.HTMLAttributes<HTMLDivE
 export function ListRow({ className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={`rounded-lg border border-line bg-surface/50 px-4 py-3 hover:bg-ink-800/50 transition-colors ${className}`}
+      className={`rounded-lg border border-line bg-surface/50 px-4 py-3 hover:bg-surface-2 transition-colors ${className}`}
       {...props}
     />
   );
