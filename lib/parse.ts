@@ -26,20 +26,19 @@ const BOILERPLATE_RE =
 /** Strip leading numbers, trailing junk, and Title Case proper nouns */
 function cleanName(raw: string): string {
   let n = raw
-    // Strip any leading digits + punctuation that the boundary regex missed (e.g. "8.David")
-    .replace(/^\d{1,4}\s*[.):-]\s*/g, "")
+    // Aggressively strip any leading digits, O's, dots, dashes, colons, spaces (e.g. "85.Chris", ".Sheila")
+    .replace(/^[\dO\s.:)\-]+/i, "")
     // Strip trailing dashes, dots, colons, underscores, commas
     .replace(/[\s\-\u2013\u2014_.:,;]+$/g, "")
     // Collapse whitespace
     .replace(/\s+/g, " ")
     .trim();
 
-  // Title Case: capitalize the first letter of each word (proper nouns)
+  // Title Case: capitalize the first letter of each word and lowercase the rest
   n = n
     .split(" ")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(" ");
-
   return n;
 }
 
