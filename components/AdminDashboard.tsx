@@ -75,6 +75,7 @@ export default function AdminDashboard({
   const [numberingMode, setNumberingMode] = useState<"original" | "sequential">("original");
   const [showImport, setShowImport] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState<{ key: 'list_number' | 'name' | 'created_at', direction: 'asc' | 'desc' }>({ key: 'list_number', direction: 'asc' });
   const ITEMS_PER_PAGE = 20;
   const [showTeam, setShowTeam] = useState(false);
   const [showEventInfo, setShowEventInfo] = useState(false);
@@ -251,8 +252,18 @@ export default function AdminDashboard({
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-line bg-surface-2">
-              <th className="px-4 py-3 text-[11px] font-semibold text-ink-soft uppercase tracking-wider whitespace-nowrap">Ordered #</th>
-              <th className="px-4 py-3 text-[11px] font-semibold text-ink-soft uppercase tracking-wider whitespace-nowrap">Name</th>
+              <th 
+                className="px-4 py-3 text-[11px] font-semibold text-ink-soft uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-primary transition-colors"
+                onClick={() => setSortConfig(s => ({ key: 'list_number', direction: s.key === 'list_number' && s.direction === 'asc' ? 'desc' : 'asc' }))}
+              >
+                Ordered # {sortConfig.key === 'list_number' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+              </th>
+              <th 
+                className="px-4 py-3 text-[11px] font-semibold text-ink-soft uppercase tracking-wider whitespace-nowrap cursor-pointer hover:text-primary transition-colors"
+                onClick={() => setSortConfig(s => ({ key: 'name', direction: s.key === 'name' && s.direction === 'asc' ? 'desc' : 'asc' }))}
+              >
+                Name {sortConfig.key === 'name' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+              </th>
               <th className="px-4 py-3 text-[11px] font-semibold text-ink-soft uppercase tracking-wider whitespace-nowrap">Phone</th>
               <th className="px-4 py-3 text-[11px] font-semibold text-ink-soft uppercase tracking-wider whitespace-nowrap">Status</th>
               <th className="px-4 py-3 text-[11px] font-semibold text-ink-soft uppercase tracking-wider whitespace-nowrap">Pickup Point</th>

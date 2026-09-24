@@ -6,18 +6,18 @@ export function Button({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "ghost" | "destructive" }) {
   const base =
-    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-ink-950 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2";
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2";
   
   let styles = "";
   if (variant === "primary") {
     styles = "bg-white text-ink-950 hover:bg-zinc-200";
   } else if (variant === "secondary") {
-    styles = "bg-ink-800 text-cream-50 hover:bg-ink-700 border border-ink-700";
+    styles = "bg-ink-800 text-ink-900 hover:bg-ink-700 border border-ink-700";
   } else if (variant === "destructive") {
     styles = "bg-red-500/10 text-red-500 hover:bg-red-500/20";
   } else {
     // ghost
-    styles = "hover:bg-ink-800 hover:text-cream-50 text-cream-100";
+    styles = "hover:bg-ink-800 hover:text-ink-900 text-ink";
   }
 
   return <button className={`${base} ${styles} ${className}`} {...props} />;
@@ -26,7 +26,7 @@ export function Button({
 export function Input({ className = "", ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={`flex h-10 w-full rounded-md border border-ink-800 bg-ink-950 px-3 py-2 text-sm ring-offset-ink-950 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-cream-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all ${className}`}
+      className={`flex h-10 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-surface file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-ink-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all ${className}`}
       {...props}
     />
   );
@@ -35,7 +35,7 @@ export function Input({ className = "", ...props }: InputHTMLAttributes<HTMLInpu
 export function Card({ className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={`rounded-xl border border-ink-800 bg-ink-900 text-cream-50 shadow-sm ${className}`}
+      className={`rounded-xl border border-line bg-surface-2 text-ink-900 shadow-sm ${className}`}
       {...props}
     />
   );
@@ -45,7 +45,7 @@ export function Card({ className = "", ...props }: React.HTMLAttributes<HTMLDivE
 export function ListRow({ className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={`rounded-lg border border-ink-800 bg-ink-950/50 px-4 py-3 hover:bg-ink-800/50 transition-colors ${className}`}
+      className={`rounded-lg border border-line bg-surface/50 px-4 py-3 hover:bg-ink-800/50 transition-colors ${className}`}
       {...props}
     />
   );
