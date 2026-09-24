@@ -55,7 +55,7 @@ export async function bulkImport(
           p_name: entry.name,
           p_phone: entry.phoneRaw,
           p_source: "bulk_import",
-          p_list_number: entry.originalListNumber ?? (i + j + 1),
+          p_list_number: entry.originalListNumber ?? null,
         })
       )
     );
@@ -218,7 +218,7 @@ export async function syncMasterList(
     const chunk = entries.slice(i, i + chunkSize);
     const results = await Promise.all(
       chunk.map(async (entry, j) => {
-        const listNumber = entry.originalListNumber ?? (i + j + 1);
+        const listNumber = entry.originalListNumber ?? null;
         const canonPhone = normalizeKePhone(entry.phoneRaw);
         
         // Find if this phone already exists in DB

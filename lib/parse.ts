@@ -15,10 +15,10 @@ export interface SkippedEntry {
 }
 
 // Relaxed phone regex: removes word boundaries so fused numbers like "peter0117526787" match.
-const PHONE_RE = /(\+?254[\s-]?\d[\d\s-]{6,12}\d|0\d[\d\s-]{6,10}\d)/;
+// Use [ \t] instead of \s so it doesn't cross newlines
+const PHONE_RE = /(\+?254[ \t-]?\d[\d \t-]{6,12}\d|0\d[\d \t-]{6,10}\d)/g;
+const SINGLE_PHONE_RE = /(\+?254[ \t-]?\d[\d \t-]{6,12}\d|0\d[\d \t-]{6,10}\d)/;
 
-// Relaxed boundary: "1.", "371.", "O.", "12)", "12:", "333 ", "545." (even without space).
-const ENTRY_BOUNDARY_RE = /^([O0]?\d{1,4})\s*[.):-]?\s*/i;
 const LIST_NUMBER_EXTRACT_RE = /^([O0]?\d{1,4})\s*[.):-]?/i;
 const BOILERPLATE_RE =
   /^(read more|register\s*(now|here|below)?\.?$|name\.?\s*phone|kindly\s*(note|register)|grace\s*(encounter|arena)|free transport|nairobi[\s-]*kenya|nakuru to uhuru park|entry free|venue|for more info|how to register|instructions?:?)/i;
@@ -51,35 +51,48 @@ export function parseRegistrationText(raw: string): {
   skipped: SkippedEntry[];
 } {
   const cleaned = normalizeUnicodeLetters(raw);
-  const lines = cleaned
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter(Boolean)
-    .filter((l) => !BOILERPLATE_RE.test(l));
-
-  const chunks: { text: string; lineNumber: number; isRealEntry: boolean }[] = [];
-  let buffer = "";
-  let bufferStartLine = 0;
-
-  lines.forEach((line, idx) => {
-    const lineHasIndex = ENTRY_BOUNDARY_RE.test(line);
-    const bufferHasPhone = PHONE_RE.test(buffer);
-
-    // Flush the buffer if the current line clearly starts a new person
-    // OR if the buffer already has a complete person (contains a phone number).
-    if ((lineHasIndex || bufferHasPhone) && buffer.trim()) {
-      chunks.push({ text: buffer, lineNumber: bufferStartLine, isRealEntry: true });
-      buffer = "";
-    }
-
-    if (!buffer) {
-      bufferStartLine = idx + 1;
-    }
-    buffer = buffer ? buffer + " " + line : line;
-  });
   
-  if (buffer.trim()) {
-    chunks.push({ text: buffer, lineNumber: bufferStartLine, isRealEntry: true });
+  // First, let's split the text into chunks by newlines, but filter out boilerplate
+  const lines = cleaned.split(/\r?\n/);
+  const validLines = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+     const l = lines[i].trim();
+     if (!l) continue;
+     if (BOILERPLATE_RE.test(l)) continue;
+     validLines.push({ text: l, lineNumber: i + 1 });
+  }
+
+  // Now we need to split lines that contain MULTIPLE entries fused together
+  // e.g. "682 .mayaka 0715791021 383. Shem 0701251561"
+  const chunks: { text: string; lineNumber: number; isRealEntry: boolean }[] = [];
+
+  for (const lineObj of validLines) {
+    const text = lineObj.text;
+    
+    // If the line has multiple phone numbers, split it into chunks
+    let lastIndex = 0;
+    let match;
+    // reset regex state
+    PHONE_RE.lastIndex = 0;
+    let matchCount = 0;
+    
+    while ((match = PHONE_RE.exec(text)) !== null) {
+      matchCount++;
+      const chunkText = text.substring(lastIndex, match.index + match[0].length);
+      chunks.push({ text: chunkText.trim(), lineNumber: lineObj.lineNumber, isRealEntry: true });
+      lastIndex = match.index + match[0].length;
+    }
+    
+    // Any remaining text after the last phone number
+    const remainder = text.substring(lastIndex).trim();
+    if (remainder) {
+       // If there were no phone numbers at all in this line, it's just a text chunk.
+       // It could be a person without a phone number, or garbage.
+       // If there WERE phone numbers, the remainder might be a person with NO phone number, 
+       // but typically it's just trailing junk. We'll add it anyway and let the next logic decide.
+       chunks.push({ text: remainder, lineNumber: lineObj.lineNumber, isRealEntry: true });
+    }
   }
 
   const entries: ParsedEntry[] = [];
@@ -92,25 +105,30 @@ export function parseRegistrationText(raw: string): {
       originalListNumber = parseInt(numMatch[1].replace(/O/i, "0"), 10);
     }
 
-    const withoutIndex = chunk.text.replace(ENTRY_BOUNDARY_RE, "").trim();
-    const phoneMatch = withoutIndex.match(PHONE_RE);
+    // Instead of replacing ENTRY_BOUNDARY_RE which might destroy names if they start with a number
+    // We already have cleanName which strips leading numbers correctly.
+    const phoneMatch = chunk.text.match(SINGLE_PHONE_RE);
 
     if (!phoneMatch) {
       if (chunk.isRealEntry) {
-        skipped.push({ rawText: chunk.text, reason: "no_phone_found", lineNumber: chunk.lineNumber });
+        // Person without a phone number
+        const name = cleanName(chunk.text);
+        if (name && name.length > 2) {
+           entries.push({ name, phoneRaw: "", phoneCanonical: null, lineNumber: chunk.lineNumber, originalListNumber });
+        } else {
+           skipped.push({ rawText: chunk.text, reason: "no_phone_found", lineNumber: chunk.lineNumber });
+        }
       }
       continue;
     }
 
     const phoneRaw = phoneMatch[0].trim();
-    const rawName = withoutIndex
-      .slice(0, phoneMatch.index)
-      .trim();
+    const rawName = chunk.text.slice(0, phoneMatch.index).trim();
 
     // Apply the cleanName pipeline: strip residual numbers, trailing junk, Title Case
     const name = cleanName(rawName);
 
-    if (!name) {
+    if (!name || name.length < 2) {
       skipped.push({ rawText: chunk.text, reason: "no_phone_found", lineNumber: chunk.lineNumber });
       continue;
     }
@@ -135,7 +153,10 @@ export function dedupeParsedEntries(entries: ParsedEntry[]): DedupeResult {
 
   for (const entry of entries) {
     if (!entry.phoneCanonical) {
-      invalidPhone.push(entry);
+      // If it doesn't have a phone, we still want to import it!
+      // The user said: "Default: no phone in paste -> always treat as new/unmatched"
+      // So they are inherently "unique" and not invalid!
+      // wait, unique is constructed at the end.
       continue;
     }
     if (seen.has(entry.phoneCanonical)) {
@@ -144,6 +165,14 @@ export function dedupeParsedEntries(entries: ParsedEntry[]): DedupeResult {
     }
     seen.set(entry.phoneCanonical, entry);
   }
+  
+  // Add phoneless entries to the unique array
+  const uniqueList = Array.from(seen.values());
+  for (const entry of entries) {
+    if (!entry.phoneCanonical) {
+       uniqueList.push(entry);
+    }
+  }
 
-  return { unique: Array.from(seen.values()), invalidPhone, duplicatesWithinPaste };
+  return { unique: uniqueList, invalidPhone, duplicatesWithinPaste };
 }
