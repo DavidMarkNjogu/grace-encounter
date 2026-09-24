@@ -1,4 +1,6 @@
-@import "tailwindcss";
+﻿import sys
+
+css_content = """@import "tailwindcss";
 
 @theme {
   /* Slate / Blue Ink for text */
@@ -71,3 +73,9 @@
     font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
 }
+"""
+
+with open('app/globals.css', 'w', encoding='utf-8') as f:
+    f.write(css_content)
+
+print("Updated globals.css to remove pure white")

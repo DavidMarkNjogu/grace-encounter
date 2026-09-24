@@ -213,7 +213,7 @@ export default function AdminDashboard({
             aria-label="Filter by status"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as Status | "all")}
-            className="flex h-10 items-center justify-between rounded-md border border-ink-800 bg-ink-950 px-3 py-2 text-sm ring-offset-ink-950 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2"
+            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-ink-950 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2"
           >
             <option value="all">All statuses</option>
             {STATUS_OPTIONS.map((s) => (
@@ -226,7 +226,7 @@ export default function AdminDashboard({
             aria-label="Filter by pickup point"
             value={pickupFilter}
             onChange={(e) => setPickupFilter(e.target.value)}
-            className="flex h-10 items-center justify-between rounded-md border border-ink-800 bg-ink-950 px-3 py-2 text-sm ring-offset-ink-950 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2"
+            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-ink-950 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2"
           >
             <option value="all">All pickup points</option>
             {pickupPoints.map((p) => (
@@ -239,7 +239,7 @@ export default function AdminDashboard({
             aria-label="Toggle numbering mode"
             value={numberingMode}
             onChange={(e) => setNumberingMode(e.target.value as "original" | "sequential")}
-            className="flex h-10 items-center justify-between rounded-md border border-ink-800 bg-ink-950 px-3 py-2 text-sm ring-offset-ink-950 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2"
+            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-ink-950 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2"
           >
             <option value="original">Original list #</option>
             <option value="sequential">Row count #</option>
@@ -247,49 +247,60 @@ export default function AdminDashboard({
         </div>
       </Card>
 
-      <div className="border border-ink-800 rounded-xl overflow-hidden bg-ink-900 shadow-sm">
-        {paginatedRegistrants.map((r, i) => (
-          <RegistrantRow
-            key={r.id}
-            registrant={r}
-            pickupPoints={pickupPoints}
-            role={role}
-            query={query}
-            displayNumber={numberingMode === "sequential" ? i + 1 : r.list_number}
-            onStatusChange={async (status) => {
-              setRegistrants((prev) => prev.map((x) => (x.id === r.id ? { ...x, status } : x)));
-              await updateStatus(r.id, status);
-            }}
-            onPickupChange={async (val) => {
-              setRegistrants((prev) =>
-                prev.map((x) => (x.id === r.id ? { ...x, pickup_point_id: val } : x))
-              );
-              await updatePickupPoint(r.id, val);
-            }}
-            onNoteChange={async (note) => {
-              setRegistrants((prev) => prev.map((x) => (x.id === r.id ? { ...x, note } : x)));
-              await updateNote(r.id, note);
-            }}
-            onDelete={async () => {
-              // Optimistic update
-              setRegistrants((prev) => prev.filter((x) => x.id !== r.id));
-              const { error } = await removeRegistrant(r.id, "Admin manually deleted row");
-              if (error) {
-                alert("Failed to delete: " + error);
-                // Revert on error (naively reload the whole page to resync)
-                window.location.reload();
-              }
-            }}
-          />
-        ))}
-        {filtered.length === 0 && (
-          <p className="py-10 text-center text-cream-200 text-sm">No matching registrants.</p>
-        )}
+            <div className="border border-line rounded-xl overflow-x-auto bg-surface shadow-md">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-line bg-surface-2">
+              <th className="px-4 py-3 text-[11px] font-semibold text-ink-soft uppercase tracking-wider whitespace-nowrap">Ordered #</th>
+              <th className="px-4 py-3 text-[11px] font-semibold text-ink-soft uppercase tracking-wider whitespace-nowrap">Name</th>
+              <th className="px-4 py-3 text-[11px] font-semibold text-ink-soft uppercase tracking-wider whitespace-nowrap">Phone</th>
+              <th className="px-4 py-3 text-[11px] font-semibold text-ink-soft uppercase tracking-wider whitespace-nowrap">Status</th>
+              <th className="px-4 py-3 text-[11px] font-semibold text-ink-soft uppercase tracking-wider whitespace-nowrap">Pickup Point</th>
+              <th className="px-4 py-3 text-[11px] font-semibold text-ink-soft uppercase tracking-wider whitespace-nowrap">Badge</th>
+              <th className="px-4 py-3 text-[11px] font-semibold text-ink-soft uppercase tracking-wider whitespace-nowrap text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedRegistrants.map((r, i) => (
+              <RegistrantRow
+                key={r.id}
+                registrant={r}
+                pickupPoints={pickupPoints}
+                role={role}
+                query={query}
+                displayNumber={numberingMode === "sequential" ? (currentPage - 1) * ITEMS_PER_PAGE + i + 1 : r.list_number}
+                onStatusChange={async (status) => {
+                  setRegistrants((prev) => prev.map((x) => (x.id === r.id ? { ...x, status } : x)));
+                  await updateStatus(r.id, status);
+                }}
+                onPickupChange={async (val) => {
+                  setRegistrants((prev) =>
+                    prev.map((x) => (x.id === r.id ? { ...x, pickup_point_id: val } : x))
+                  );
+                  await updatePickupPoint(r.id, val);
+                }}
+                onNoteChange={async (note) => {
+                  setRegistrants((prev) => prev.map((x) => (x.id === r.id ? { ...x, note } : x)));
+                  await updateNote(r.id, note);
+                }}
+                onDelete={async () => {
+                  setRegistrants((prev) => prev.filter((x) => x.id !== r.id));
+                  await removeRegistrant(r.id, 'Deleted via Dashboard');
+                }}
+              />
+            ))}
+            {paginatedRegistrants.length === 0 && (
+              <tr>
+                <td colSpan={7} className="p-8 text-center text-sm text-ink-soft">No registrants found.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {totalPages > 1 && (
-        <div className="mt-6 flex items-center justify-between border-t border-ink-800 pt-4">
-          <p className="text-sm text-cream-200">
+        <div className="mt-6 flex items-center justify-between border-t border-line pt-4">
+          <p className="text-sm text-ink-soft">
             Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length} entries
           </p>
           <div className="flex gap-2">
@@ -304,9 +315,9 @@ export default function AdminDashboard({
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <Card className="p-4 flex flex-col justify-center border border-ink-800 shadow-sm bg-ink-950">
-      <p className="text-3xl font-bold text-cream-50">{value}</p>
-      <p className="text-xs text-cream-200 mt-1">{label}</p>
+    <Card className="p-4 flex flex-col justify-center border border-line shadow-sm bg-surface">
+      <p className="text-3xl font-bold text-ink-900">{value}</p>
+      <p className="text-xs text-ink-soft mt-1">{label}</p>
     </Card>
   );
 }
@@ -397,32 +408,32 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
   if (reviewMode && reviewIndex < reviewItems.length) {
     const item = reviewItems[reviewIndex];
     return (
-      <Card className="mb-6 bg-ink-900 border-gold-500/30 p-5 shadow-lg">
+      <Card className="mb-6 bg-surface-2 border-gold-500/30 p-5 shadow-lg">
         <h2 className="mb-4 text-xl font-medium text-gold-400 flex items-center gap-2">
            <AlertCircle className="h-6 w-6" />
            Manual Review ({reviewIndex + 1} of {reviewItems.length})
         </h2>
-        <div className="bg-ink-950 p-4 rounded-md text-sm text-cream-200 mb-5 border border-ink-800">
-           <span className="text-cream-100 opacity-50 mr-2 block mb-1 uppercase tracking-wider text-xs font-semibold">Raw Text Detected:</span>
+        <div className="bg-surface p-4 rounded-md text-sm text-ink-soft mb-5 border border-line">
+           <span className="text-ink opacity-50 mr-2 block mb-1 uppercase tracking-wider text-xs font-semibold">Raw Text Detected:</span>
            <span className="font-medium">{item.rawText}</span>
         </div>
         
         <div className="flex flex-col gap-4 mb-6">
            <div>
-             <label className="text-xs font-medium text-cream-200 mb-1.5 block">Correct Name</label>
-             <input value={reviewName} onChange={e => setReviewName(e.target.value)} className="w-full bg-ink-950 border border-ink-800 px-3 py-2.5 rounded-md text-sm outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500/50" placeholder="E.g. John Doe" />
+             <label className="text-xs font-medium text-ink-soft mb-1.5 block">Correct Name</label>
+             <input value={reviewName} onChange={e => setReviewName(e.target.value)} className="w-full bg-surface border border-line px-3 py-2.5 rounded-md text-sm outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500/50" placeholder="E.g. John Doe" />
            </div>
            <div>
-             <label className="text-xs font-medium text-cream-200 mb-1.5 block">Correct Phone</label>
-             <input value={reviewPhone} onChange={e => setReviewPhone(e.target.value)} className="w-full bg-ink-950 border border-ink-800 px-3 py-2.5 rounded-md text-sm outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500/50" placeholder="07xx xxx xxx" />
+             <label className="text-xs font-medium text-ink-soft mb-1.5 block">Correct Phone</label>
+             <input value={reviewPhone} onChange={e => setReviewPhone(e.target.value)} className="w-full bg-surface border border-line px-3 py-2.5 rounded-md text-sm outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500/50" placeholder="07xx xxx xxx" />
            </div>
         </div>
 
         <div className="flex gap-2 items-center">
            <Button onClick={() => resolveItem(true)}>Save & Next</Button>
            <Button variant="secondary" onClick={() => resolveItem(false)}>Skip</Button>
-           <Button variant="ghost" disabled={reviewIndex === 0} onClick={() => setReviewIndex(i => Math.max(0, i - 1))} className="text-cream-200">Previous</Button>
-           <Button variant="ghost" onClick={() => setReviewMode(false)} className="ml-auto text-cream-200">Close</Button>
+           <Button variant="ghost" disabled={reviewIndex === 0} onClick={() => setReviewIndex(i => Math.max(0, i - 1))} className="text-ink-soft">Previous</Button>
+           <Button variant="ghost" onClick={() => setReviewMode(false)} className="ml-auto text-ink-soft">Close</Button>
         </div>
       </Card>
     );
@@ -431,7 +442,7 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
   return (
     <Card className="mb-4 p-5">
       <h2 className="mb-2 text-lg">Import from WhatsApp</h2>
-      <p className="mb-3 text-sm text-cream-200">
+      <p className="mb-3 text-sm text-ink-soft">
         Paste one or more pasted message blocks below. We'll parse, normalize phone numbers,
         and skip anything already on the list.
       </p>
@@ -440,7 +451,7 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
         onChange={(e) => setText(e.target.value)}
         rows={8}
         placeholder="Paste the WhatsApp list text here..."
-        className="w-full rounded-xl border border-ink-800 bg-ink-950 p-3 text-sm outline-none focus:border-gold-500"
+        className="w-full rounded-xl border border-line bg-surface p-3 text-sm outline-none focus:border-gold-500"
       />
       <div className="mt-3 flex gap-2">
         <Button variant="ghost" onClick={runPreview} disabled={!text.trim()}>
@@ -454,17 +465,17 @@ function ImportPanel({ onDone }: { onDone: (r: any) => void }) {
       </div>
       {preview && (
         <div className="mt-3">
-          <p className="text-sm text-cream-200 mb-2">
+          <p className="text-sm text-ink-soft mb-2">
             Found {preview.unique.length} new, {preview.duplicatesWithinPaste.length} repeated
             within this paste.
           </p>
           {reviewItems.length > 0 && (
-            <div className="bg-ink-900/40 p-3 rounded-lg border border-warning-500/20 text-sm">
+            <div className="bg-surface-2/40 p-3 rounded-lg border border-warning-500/20 text-sm">
               <div className="flex justify-between items-center mb-2">
                  <p className="text-warning-400 font-medium">Needs Manual Review ({reviewItems.length})</p>
                  <Button variant="secondary" onClick={() => setReviewMode(true)} className="py-1 h-8 text-xs">Review Now</Button>
               </div>
-              <p className="text-cream-200 text-xs">Some items couldn't be parsed automatically. Click review to fix them.</p>
+              <p className="text-ink-soft text-xs">Some items couldn't be parsed automatically. Click review to fix them.</p>
             </div>
           )}
         </div>
@@ -506,7 +517,7 @@ function TeamPanel({
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as "caller" | "admin")}
-            className="flex h-10 items-center justify-between rounded-md border border-ink-800 bg-ink-950 px-3 py-2 text-sm ring-offset-ink-950 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2"
+            className="flex h-10 items-center justify-between rounded-md border border-line bg-surface px-3 py-2 text-sm ring-offset-ink-950 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2"
           >
             <option value="caller">Caller</option>
             <option value="admin">Admin</option>
@@ -524,11 +535,11 @@ function TeamPanel({
             Add
           </Button>
         </div>
-        {msg && <p className="mb-4 text-sm text-cream-200">{msg}</p>}
+        {msg && <p className="mb-4 text-sm text-ink-soft">{msg}</p>}
 
-        <ul className="space-y-1 text-sm text-cream-100">
+        <ul className="space-y-1 text-sm text-ink">
           {teamMembers.map((m) => (
-            <li key={m.id} className="flex justify-between border-b border-ink-800 py-1">
+            <li key={m.id} className="flex justify-between border-b border-line py-1">
               <span>{m.email} ({m.role})</span>
               <button 
                 onClick={async () => {
@@ -547,7 +558,7 @@ function TeamPanel({
       </div>
       <div>
         <h2 className="mb-2 text-lg">Pickup points</h2>
-        <p className="mb-2 text-sm text-cream-200">
+        <p className="mb-2 text-sm text-ink-soft">
           {pickupPoints.map((p) => p.name).join(" · ") || "None yet"}
         </p>
         <div className="flex gap-2">
@@ -621,21 +632,21 @@ function EventInfoPanel({
             className="w-40"
           />
         </div>
-        <p className="mt-1 text-xs text-cream-200">
+        <p className="mt-1 text-xs text-ink-soft">
           Leave lat/lng blank until the exact pin is confirmed — the public page shows
           "to be confirmed" until then.
         </p>
       </div>
       <div>
         <h2 className="mb-2 text-lg">FAQ</h2>
-        <p className="mb-2 text-xs text-cream-200">
+        <p className="mb-2 text-xs text-ink-soft">
           One entry per block, separated by a blank line, each as "Q: …" then "A: …".
         </p>
         <textarea
           value={faqText}
           onChange={(e) => setFaqText(e.target.value)}
           rows={10}
-          className="w-full rounded-xl border border-ink-800 bg-ink-950 p-3 text-sm outline-none focus:border-gold-500"
+          className="w-full rounded-xl border border-line bg-surface p-3 text-sm outline-none focus:border-gold-500"
         />
       </div>
       <Button
@@ -654,7 +665,7 @@ function EventInfoPanel({
       >
         {saving ? "Saving…" : "Save"}
       </Button>
-      {msg && <p className="text-sm text-cream-200">{msg}</p>}
+      {msg && <p className="text-sm text-ink-soft">{msg}</p>}
     </Card>
   );
 }
@@ -685,64 +696,85 @@ function RegistrantRow({
   const numberToShow = displayNumber !== undefined ? displayNumber : r.list_number;
 
   return (
-    <div className="py-2 border-b border-ink-800 last:border-0 hover:bg-ink-800/30 transition-colors">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="min-w-[160px] flex-1">
-          <p className="font-medium">
-            {numberToShow !== null && <span className="text-cream-200 mr-2">#{numberToShow}</span>}
-            <Highlight text={r.name} query={query} />
-          </p>
-          <p className="text-xs text-cream-200">
-            <Highlight text={formatKePhoneDisplay(r.phone_canonical)} query={query.replace(/\D/g, "")} />
-          </p>
-        </div>
-        <select
-          value={r.status}
-          onChange={(e) => onStatusChange(e.target.value as Status)}
-          className="rounded-full border border-ink-800 bg-ink-950 px-3 py-1.5 text-xs"
-        >
-          {STATUS_OPTIONS.map((s) => (
-            <option key={s} value={s}>
-              {s.replace("_", " ")}
-            </option>
-          ))}
-        </select>
-        <select
-          value={r.pickup_point_id ?? ""}
-          onChange={(e) => onPickupChange(e.target.value || null)}
-          className="rounded-full border border-ink-800 bg-ink-950 px-3 py-1.5 text-xs"
-        >
-          <option value="">No pickup point</option>
-          {pickupPoints.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-        <StatusBadge status={r.status} />
-        <button
-          type="button"
-          onClick={() => setShowNote((v) => !v)}
-          className="text-xs text-cream-200 underline hover:text-cream-100/70"
-        >
-          {r.note ? "Note" : "+ note"}
-        </button>
-        {role === "admin" && (<button type="button" onClick={() => { if (window.confirm(`Are you sure you want to permanently delete ${r.name}?`)) { onDelete(); } }} className="text-xs text-red-400/60 underline hover:text-red-400">Delete</button>)}
-      </div>
+    <>
+      <tr className="border-b border-line hover:bg-surface-2 transition-colors group">
+        <td className="px-4 py-3 text-sm text-ink-soft whitespace-nowrap">{numberToShow !== null ? '#' + numberToShow : "-"}</td>
+        <td className="px-4 py-3 text-sm font-medium text-ink-900">
+          <Highlight text={r.name} query={query} />
+        </td>
+        <td className="px-4 py-3 text-sm text-ink-700 whitespace-nowrap">
+          <Highlight text={formatKePhoneDisplay(r.phone_canonical)} query={query.replace(/\D/g, "")} />
+        </td>
+        <td className="px-4 py-3 whitespace-nowrap">
+          <select
+            value={r.status}
+            onChange={(e) => onStatusChange(e.target.value as Status)}
+            className="rounded-md border border-line bg-surface-2 px-2.5 py-1.5 text-xs text-ink-800 shadow-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+          >
+            {STATUS_OPTIONS.map((s) => (
+              <option key={s} value={s}>
+                {s.replace("_", " ")}
+              </option>
+            ))}
+          </select>
+        </td>
+        <td className="px-4 py-3 whitespace-nowrap">
+          <select
+            value={r.pickup_point_id ?? ""}
+            onChange={(e) => onPickupChange(e.target.value || null)}
+            className="rounded-md border border-line bg-surface-2 px-2.5 py-1.5 text-xs text-ink-800 shadow-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+          >
+            <option value="">No pickup point</option>
+            {pickupPoints.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        </td>
+        <td className="px-4 py-3 whitespace-nowrap">
+          <StatusBadge status={r.status} />
+        </td>
+        <td className="px-4 py-3 whitespace-nowrap text-right">
+          <div className="flex items-center justify-end gap-3 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              type="button"
+              onClick={() => setShowNote((v) => !v)}
+              className="text-xs font-medium text-primary hover:text-primary-3 transition-colors"
+            >
+              {r.note ? "Edit Note" : "+ Add Note"}
+            </button>
+            {role === "admin" && (
+              <button 
+                type="button" 
+                onClick={() => { if (window.confirm(`Are you sure you want to permanently delete ${r.name}?`)) { onDelete(); } }} 
+                className="text-xs font-medium text-danger hover:text-danger-bg transition-colors"
+              >
+                Delete
+              </button>
+            )}
+          </div>
+        </td>
+      </tr>
       {showNote && (
-        <div className="mt-2 flex gap-2">
-          <Input
-            placeholder="e.g. confirming Friday, called twice no answer…"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            onBlur={() => {
-              if (note !== (r.note ?? "")) onNoteChange(note);
-            }}
-            className="text-xs"
-          />
-        </div>
+        <tr className="bg-bg border-b border-line">
+          <td colSpan={7} className="px-4 py-3 pl-8">
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-ink-soft uppercase tracking-wider font-semibold">Note:</span>
+              <Input
+                placeholder="e.g. confirming Friday, called twice no answer..."
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                onBlur={() => {
+                  if (note !== (r.note ?? "")) onNoteChange(note);
+                }}
+                className="text-sm w-full max-w-2xl bg-surface border-line text-ink"
+              />
+            </div>
+          </td>
+        </tr>
       )}
-    </div>
+    </>
   );
 }
 
@@ -758,28 +790,28 @@ function DuplicatesPanel({
   return (
     <Card className="mb-4 p-5">
       <h2 className="mb-1 text-lg">Possible duplicates</h2>
-      <p className="mb-3 text-sm text-cream-200">
+      <p className="mb-3 text-sm text-ink-soft">
         Same or very similar name, different phone number — never auto-merged. Confirm each
         one: if they're genuinely different people, dismiss; if it's the same person under a
         second number, remove the extra entry.
       </p>
       {duplicates.length === 0 && (
-        <p className="text-sm text-cream-200">None right now.</p>
+        <p className="text-sm text-ink-soft">None right now.</p>
       )}
-      <div className="border border-ink-800 rounded-xl overflow-hidden bg-ink-900 shadow-sm">
+      <div className="border border-line rounded-xl overflow-hidden bg-surface-2 shadow-sm">
         {duplicates.map((d) => (
           <div
             key={d.id}
-            className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-ink-800 p-3 text-sm"
+            className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line p-3 text-sm"
           >
             <div>
               <p>
                 <span className="font-medium">{d.name}</span>{" "}
-                <span className="text-cream-200">({formatKePhoneDisplay(d.phone_canonical)})</span>
+                <span className="text-ink-soft">({formatKePhoneDisplay(d.phone_canonical)})</span>
               </p>
-              <p className="text-cream-200 text-xs">
+              <p className="text-ink-soft text-xs">
                 looks like{" "}
-                <span className="text-cream-200">{d.matched_name}</span>{" "}
+                <span className="text-ink-soft">{d.matched_name}</span>{" "}
                 ({formatKePhoneDisplay(d.matched_phone)})
               </p>
             </div>

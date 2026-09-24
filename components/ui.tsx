@@ -59,10 +59,10 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  not_called: "bg-ink-800 text-cream-100",
-  pending: "bg-blue-500/10 text-blue-500 border border-blue-500/20",
-  confirmed: "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20",
-  tentative: "bg-amber-500/10 text-amber-500 border border-amber-500/20",
+  not_called: "bg-surface-3 text-ink-soft border border-line",
+  pending: "bg-primary-soft text-primary-3 border border-primary-soft-2",
+  confirmed: "bg-good-bg text-good border border-good/20",
+  tentative: "bg-warn-bg text-warn border border-warn/20",
 };
 
 export function StatusBadge({ status }: { status: string }) {
